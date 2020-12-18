@@ -28,7 +28,7 @@ Be sure to replace the S1_CONSOLE_PREFIX (ie: usea1-011), API_KEY, SITE_TOKEN an
 ## Linux-based instances
 ```
 #!/bin/bash
-sudo curl -L "https://raw.githubusercontent.com/howie-howerton/s1-agents/master/s1-agent-helper.sh" -o s1-agent-helper.sh
+sudo curl -L "https://raw.githubusercontent.com/s1community/s1-agents-helper/master/s1-agent-helper.sh" -o s1-agent-helper.sh
 sudo chmod +x s1-agent-helper.sh
 sudo ./s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 ```
@@ -36,7 +36,7 @@ sudo ./s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 ```
 <powershell>
 Set-ExecutionPolicy Unrestricted
-(new-object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/howie-howerton/s1-agents/master/s1-agent-helper.ps1", "$env:TEMP\s1-agent-helper.ps1") 
+(new-object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/s1community/s1-agents-helper/master/s1-agent-helper.ps1", "$env:TEMP\s1-agent-helper.ps1") 
 & "$env:TEMP\s1-agent-helper.ps1" S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 </powershell>
 <runAsLocalSystem>true</runAsLocalSystem>
@@ -47,7 +47,7 @@ When manually creating a new Compute Engine instance, expand "Management, securi
 Be sure to replace the S1_CONSOLE_PREFIX (ie: usea1-011), API_KEY, SITE_TOKEN and VERSION_STATUS (ie: GA or EA) values with appropriate values:
 ```
 #!/bin/bash
-sudo curl -L "https://raw.githubusercontent.com/howie-howerton/s1-agents/master/s1-agent-helper.sh" -o s1-agent-helper.sh
+sudo curl -L "https://raw.githubusercontent.com/s1community/s1-agents-helper/master/s1-agent-helper.sh" -o s1-agent-helper.sh
 sudo chmod +x s1-agent-helper.sh
 sudo ./s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 ```
@@ -62,7 +62,7 @@ write_files:
     permissions: 0755
     content: |
       #!/bin/bash
-      curl https://raw.githubusercontent.com/howie-howerton/s1-agents/master/s1-agent-helper.sh -o /tmp/s1-agent-helper.sh
+      curl https://raw.githubusercontent.com/s1community/s1-agents-helper/master/s1-agent-helper.sh -o /tmp/s1-agent-helper.sh
       chmod 755 /tmp/s1-agent-helper.sh
       /tmp/s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 runcmd:
