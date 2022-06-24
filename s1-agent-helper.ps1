@@ -7,12 +7,14 @@ param(
     [Parameter(Position=2,mandatory=$true)]
     [string]$site_token,
     [Parameter(Position=3,mandatory=$true)]
-    [string]$version_status
+    [string]$version_status,
+    [Parameter(Position=4,mandatory=$false)]
+    [string]$auto_reboot
     )
 
 write-output "Console:          $s1_console_prefix"
-write-output "API Key:          $api_key"
-write-output "Site Token:       $site_token"
+# write-output "API Key:          $api_key"
+# write-output "Site Token:       $site_token"
 write-output "Version Status:   $version_status"
 
 
@@ -27,8 +29,8 @@ if (-Not ($api_key.Length -eq 80)) {
     exit 1
 }
 
-if (-Not ($site_token.Length -gt 100)) {
-    Write-Output "Site Tokens are generally 100 characters or longer and are ASCII encoded."
+if (-Not ($site_token.Length -gt 90)) {
+    Write-Output "Site Tokens are generally 90 characters or longer and are ASCII encoded."
     exit 1
 }
 
@@ -38,22 +40,29 @@ if ($version_status -ne "GA" -and $version_status -ne "EA") {
     exit 1
 }
 
-Write-Output "all good"
-
+# Concatenate URL with API Endpoint
 $uri = $s1_mgmt_url + $api_endpoint
-Write-Output $uri
+
+# Convert Agent version status to lowercase
+$version_status = $version_status.ToLower()
+
+# Check if we need a 32 or 64bit package
+$osArch = "64 bit"
+if($env:PROCESSOR_ARCHITECTURE -eq "x86"){$osArch = "32 bit"}
+
 
 # Configure HTTP header for API Calls
 $apiHeaders = @{"Authorization"="APIToken $api_key"}
-# The body contains parameters to search for packages with .exe file extensions.. ordering by latest version.
+# The body contains parameters to search for packages with .exe file extensions.. ordering by latest major version.
 $body = @{
     "limit"=10
-    "packageTypes"="Agent"
-    "osTypes"="windows"
+    "platformTypes"="windows"
     "countOnly"="false"
-    "sortBy"="createdAt"
+    "sortBy"="majorVersion"
     "fileExtension"=".exe"
     "sortOrder"="desc"
+    "osArches"=$osArch
+    "status"=$version_status
     }
 # Query the S1 API
 $response = Invoke-RestMethod -Uri $uri -Headers $apiHeaders -Method Get -ContentType "application/json" -Body $body
@@ -76,6 +85,20 @@ Write-Output "Agent Download Link: $agent_download_link"
 $wc = New-Object System.Net.WebClient
 $wc.Headers['Authorization'] = "APIToken $api_key"
 $wc.DownloadFile($agent_download_link, "$env:TEMP\$agent_file_name")
-# Execute the package with the quiet option
-& "$env:TEMP\$agent_file_name" /SITE_TOKEN=$site_token /quiet /reboot
 
+##### LOGIC TO HANDLE OLDER VERSIONS??? #####
+
+##### LOGIC TO HANDLE FLAGS (SERVER_PROXY, SERVER_PROXY_CREDENTIALS, IOC_PROXY, VDI, WSC)
+
+# Execute the package
+# if($auto_reboot -eq "True") {
+#     # Execute the package with the quiet option and force restart
+#     & "$env:TEMP\$agent_file_name" /SITE_TOKEN=$site_token /quiet /reboot
+# }
+# else {
+#     # Execute the package with the quiet option and do NOT restart
+#     & "$env:TEMP\$agent_file_name" /SITE_TOKEN=$site_token /quiet /norestart
+# }
+
+# Execute the package (22.1+)
+& "$env:TEMP\$agent_file_name" -t $site_token
