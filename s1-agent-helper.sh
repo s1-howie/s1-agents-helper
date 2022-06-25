@@ -22,6 +22,7 @@ PACKAGE_MANAGER=''
 AGENT_INSTALL_SYNTAX=''
 AGENT_FILE_NAME=''
 AGENT_DOWNLOAD_LINK=''
+VERSION_COMPARE_RESULT=''
 
 Color_Off='\033[0m'       # Text Resets
 # Regular Colors
@@ -58,7 +59,7 @@ function curl_check () {
         elif [[ $1 = 'dnf' ]]; then
             sudo dnf install -y curl
         else
-            printf "\n${Red}ERROR:  Unsupported file extension.${Color_Off}\n"
+            printf "\n${Red}ERROR:  Unsupported package manager: $1.${Color_Off}\n"
         fi
     else
         printf "${Yellow}INFO:  curl is already installed.${Color_Off}\n"
@@ -66,9 +67,9 @@ function curl_check () {
 }
 
 # Check if the SITE_TOKEN is in the right format
-if ! [[ ${#SITE_TOKEN} -gt 100 ]]; then
+if ! [[ ${#SITE_TOKEN} -gt 90 ]]; then
     printf "\n${Red}ERROR:  Invalid format for SITE_TOKEN: $SITE_TOKEN ${Color_Off}\n"
-    echo "Site Tokens are generally more than 100 characters long and are ASCII encoded."
+    echo "Site Tokens are generally more than 90 characters long and are ASCII encoded."
     echo ""
     exit 1
 fi
@@ -82,9 +83,10 @@ if ! [[ ${#API_KEY} -eq 80 ]]; then
 fi
 
 # Check if the VERSION_STATUS is in the right format
-if [[ ${VERSION_STATUS} != *"GA"* && "$VERSION_STATUS" != *"EA"* ]]; then
+VERSION_STATUS=$(echo $VERSION_STATUS | tr [A-Z] [a-z])
+if [[ ${VERSION_STATUS} != *"ga"* && "$VERSION_STATUS" != *"ea"* ]]; then
     printf "\n${Red}ERROR:  Invalid format for VERSION_STATUS: $VERSION_STATUS ${Color_Off}\n"
-    echo "The value of VERSION_STATUS must contain either 'EA' or 'GA'"
+    echo "The value of VERSION_STATUS must contain either 'ea' or 'ga'"
     echo ""
     exit 1
 fi
@@ -111,15 +113,43 @@ function jq_check () {
 }
 
 
+function check_api_response () {
+    if [[ $(cat response.txt | jq 'has("errors")') == 'true' ]]; then
+        printf "\n${Red}ERROR:  Could not authenticate using the existing mgmt server and api key. ${Color_Off}\n"
+        echo ""
+        exit 1
+    fi
+}
+
+
 function get_latest_version () {
+    VERSION=''
     for i in {0..20}; do
         s=$(cat response.txt | jq -r ".data[$i].status")
         if [[ $s == *$VERSION_STATUS* ]]; then
-            AGENT_FILE_NAME=$(cat response.txt | jq -r ".data[$i].fileName")
-            AGENT_DOWNLOAD_LINK=$(cat response.txt | jq -r ".data[$i].link")
-            break
+            echo $(cat response.txt | jq -r ".data[$i].version") >> versions.txt
         fi
     done
+    VERSION=$(cat versions.txt | sort -t "." -k 1,1 -k 2,2 -k 3,3 -k 4,4 -g | tail -n 1)
+    echo "The latest version is: $VERSION"
+}
+
+function get_latest_version_info () {
+    for i in {0..20}; do
+        s=$(cat response.txt | jq -r ".data[$i].status")
+        if [[ $s == *$VERSION_STATUS* ]]; then
+            if [[ $(cat response.txt | jq -r ".data[$i].version") == $VERSION ]];then
+                AGENT_FILE_NAME=$(cat response.txt | jq -r ".data[$i].fileName")
+                AGENT_DOWNLOAD_LINK=$(cat response.txt | jq -r ".data[$i].link")
+            fi
+        fi
+    done
+
+    if [[ $AGENT_FILE_NAME = '' ]]; then
+        printf "\n${Red}ERROR:  Could not obtain AGENT_FILE_NAME in get_latest_version function. ${Color_Off}\n"
+        echo ""
+        exit 1
+    fi
 }
 
 
@@ -128,7 +158,7 @@ if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian');
     FILE_EXTENSION='.deb'
     PACKAGE_MANAGER='apt'
     AGENT_INSTALL_SYNTAX='dpkg -i'
-elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"'); then
+elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
     FILE_EXTENSION='.rpm'
     PACKAGE_MANAGER='yum'
     AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
@@ -149,7 +179,9 @@ fi
 curl_check $PACKAGE_MANAGER
 jq_check $PACKAGE_MANAGER
 sudo curl -H "Accept: application/json" -H "Authorization: ApiToken $API_KEY" "$S1_MGMT_URL$API_ENDPOINT?countOnly=false&packageTypes=Agent&osTypes=linux&sortBy=createdAt&limit=20&fileExtension=$FILE_EXTENSION&sortOrder=desc" > response.txt
+check_api_response
 get_latest_version
+get_latest_version_info
 printf "\n${Yellow}INFO:  Downloading $AGENT_FILE_NAME ${Color_Off}\n"
 sudo curl -H "Authorization: ApiToken $API_KEY" $AGENT_DOWNLOAD_LINK -o /tmp/$AGENT_FILE_NAME
 printf "\n${Yellow}INFO:  Installing S1 Agent: $(echo "sudo $AGENT_INSTALL_SYNTAX /tmp/$AGENT_FILE_NAME") ${Color_Off}\n"
@@ -162,6 +194,7 @@ sudo /opt/sentinelone/bin/sentinelctl control start
 #clean up files..
 printf "\n${Yellow}INFO:  Cleaning up files... ${Color_Off}\n"
 rm -f response.txt
+rm -f versions.txt
 rm -f /tmp/$AGENT_FILE_NAME
 
 printf "\n${Green}SUCCESS:  Finished installing SentinelOne Agent. ${Color_Off}\n\n"
