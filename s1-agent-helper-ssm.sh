@@ -1,20 +1,20 @@
 #!/bin/bash
-################################################################################
+##############################################################################################################
 # Description:  Bash script to aid with automating S1 Linux Agent install via AWS Systems Manager
 #
 # Pre-requisites: EC2 instances must have IAM permissions to access Systems Manager (ie: AmazonEC2RoleforSSM)
 # 
 # Version:  1.0
-################################################################################
+##############################################################################################################
 
 
-# NOTE:  This version will install the latest EA or GA version of the S1 agent
+# NOTE:  This version will install the latest EA or GA version of the SentinelOne Linux agent
 # NOTE:  This script will install the curl and jq utilities if not already installed.
 
 # References:
 # - https://docs.aws.amazon.com/systems-manager/latest/userguide/integration-s3.html
 
-
+# CUSTOMIZE THE VALUE OF AWS_REGION TO FIT YOUR SSM ENVIRONMENT
 AWS_REGION=us-east-1
 
 # Retrieve values from Systems Manager Parameter Store
@@ -179,6 +179,8 @@ else
 fi
 
 curl_check $PACKAGE_MANAGER
+# Retrieve AWS_REGION from EC2 Instance Metadata URL
+# AWS_REGION=$(TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/placement/region)
 jq_check $PACKAGE_MANAGER
 sudo curl -H "Accept: application/json" -H "Authorization: ApiToken $API_KEY" "$S1_MGMT_URL$API_ENDPOINT?countOnly=false&packageTypes=Agent&osTypes=linux&sortBy=createdAt&limit=20&fileExtension=$FILE_EXTENSION&sortOrder=desc" > response.txt
 check_api_response

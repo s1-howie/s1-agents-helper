@@ -1,11 +1,11 @@
 #!/bin/bash
-################################################################################
+##############################################################################################################
 # Description:  Bash script to aid with automating S1 Agent install on Linux
 # 
 # Usage:    sudo ./s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 # 
 # Version:  1.5
-################################################################################
+##############################################################################################################
 
 # NOTE:  This version will install the latest EA or GA version of the S1 agent
 # NOTE:  This script will install the curl and jq utilities if not already installed.
