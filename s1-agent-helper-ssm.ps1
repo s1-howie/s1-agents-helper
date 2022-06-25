@@ -1,23 +1,14 @@
 #Requires -RunAsAdministrator
-# NOTE:  The auto_reboot parameter only applies to the EXE agents versions < 22.1
-param(
-    [Parameter(Position=0,mandatory=$true)]
-    [string]$s1_console_prefix,
-    [Parameter(Position=1,mandatory=$true)]
-    [string]$api_key,
-    [Parameter(Position=2,mandatory=$true)]
-    [string]$site_token,
-    [Parameter(Position=3,mandatory=$true)]
-    [string]$version_status,
-    [Parameter(Position=4,mandatory=$false)]
-    [string]$auto_reboot
-    )
+
+$s1_mgmt_url =  (Get-SSMParameter -Name "S1_MGMT_URL" -WithDecryption $True).Value
+$api_key =  (Get-SSMParameter -Name "S1_API_KEY" -WithDecryption $True).Value
+$site_token =  (Get-SSMParameter -Name "S1_SITE_TOKEN" -WithDecryption $True).Value
+$version_status = (Get-SSMParameter -Name "S1_VERSION_STATUS" -WithDecryption $True).Value
 
 # Show how the input parameters will be used
 write-output ""
 write-output "Console:             $s1_console_prefix"
 write-output "Version Status:      $version_status"
-$s1_mgmt_url = "https://$s1_console_prefix.sentinelone.net"
 Write-Output "mgmt url:            $s1_mgmt_url"
 $api_endpoint = "/web/api/v2.1/update/agent/packages"
 $agent_file_name = ""
