@@ -18,12 +18,23 @@
 AWS_REGION=us-east-1
 
 # Install zip utility
-yum install -y unzip
+if ! [[ -x "$(which unzip)" ]]; then
+    printf "\n${Yellow}INFO:  Installing unzip utility... ${Color_Off}\n"
+    yum install -y unzip
+else
+    printf "${Yellow}INFO:  unzip is already installed.${Color_Off}\n"
+fi
+
+
 # Install AWS CLI
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
-mv /usr/local/bin/aws /usr/local/sbin/aws
+if ! [[ -x "$(which aws)" ]]; then
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+    mv /usr/local/bin/aws /usr/local/sbin/aws
+else
+    printf "${Yellow}INFO:  awx cli is already installed.${Color_Off}\n"
+fi
 
 # Retrieve values from Systems Manager Parameter Store
 S1_MGMT_URL=$(aws ssm get-parameters --names S1_MGMT_URL --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
