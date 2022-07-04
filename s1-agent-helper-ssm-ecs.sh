@@ -33,7 +33,7 @@ if ! [[ -x "$(which aws)" ]]; then
     sudo ./aws/install
     mv /usr/local/bin/aws /usr/local/sbin/aws
 else
-    printf "${Yellow}INFO:  awx cli is already installed.${Color_Off}\n"
+    printf "${Yellow}INFO:  aws cli is already installed.${Color_Off}\n"
 fi
 
 # Retrieve values from Systems Manager Parameter Store
