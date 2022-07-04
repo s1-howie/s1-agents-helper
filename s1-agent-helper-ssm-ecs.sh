@@ -1,11 +1,11 @@
 #!/bin/bash
-##############################################################################################################
-# Description:  Bash script to aid with automating S1 Linux Agent install via AWS Systems Manager
+##################################################################################################################################
+# Description:  Bash script to aid with automating S1 Linux Agent install to ECS Container Instances via AWS Systems Manager
 #
-# Pre-requisites: EC2 instances must have IAM permissions to access Systems Manager (ie: AmazonEC2RoleforSSM)
+# Pre-requisites: EC2 Container instances must have IAM permissions to access Systems Manager (ie: AmazonEC2RoleforSSM)
 # 
 # Version:  1.0
-##############################################################################################################
+##################################################################################################################################
 
 
 # NOTE:  This version will install the latest EA or GA version of the SentinelOne Linux agent
@@ -13,6 +13,7 @@
 
 # References:
 # - https://docs.aws.amazon.com/systems-manager/latest/userguide/integration-s3.html
+# - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ec2-run-command.html
 
 # CUSTOMIZE THE VALUE OF AWS_REGION TO FIT YOUR SSM ENVIRONMENT
 AWS_REGION=us-east-1
@@ -20,7 +21,17 @@ AWS_REGION=us-east-1
 # Install zip utility
 if ! [[ -x "$(which unzip)" ]]; then
     printf "\n${Yellow}INFO:  Installing unzip utility... ${Color_Off}\n"
-    yum install -y unzip
+    if [[ $1 = 'apt' ]]; then
+        sudo apt-get update && sudo apt-get install -y unzip
+    elif [[ $1 = 'yum' ]]; then
+        sudo yum install -y unzip
+    elif [[ $1 = 'zypper' ]]; then
+        sudo zypper install -y unzip
+    elif [[ $1 = 'dnf' ]]; then
+        sudo dnf install -y unzip
+    else
+        printf "\n${Red}ERROR:  Unsupported file extension.${Color_Off}\n"
+    fi
 else
     printf "${Yellow}INFO:  unzip is already installed.${Color_Off}\n"
 fi
@@ -28,6 +39,7 @@ fi
 
 # Install AWS CLI
 if ! [[ -x "$(which aws)" ]]; then
+    printf "\n${Yellow}INFO:  Installing aws cli utility... ${Color_Off}\n"
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     unzip awscliv2.zip
     sudo ./aws/install
