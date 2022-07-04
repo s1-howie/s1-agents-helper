@@ -18,42 +18,6 @@
 # CUSTOMIZE THE VALUE OF AWS_REGION TO FIT YOUR SSM ENVIRONMENT
 AWS_REGION=us-east-1
 
-# Install zip utility
-if ! [[ -x "$(which unzip)" ]]; then
-    printf "\n${Yellow}INFO:  Installing unzip utility... ${Color_Off}\n"
-    if [[ $1 = 'apt' ]]; then
-        sudo apt-get update && sudo apt-get install -y unzip
-    elif [[ $1 = 'yum' ]]; then
-        sudo yum install -y unzip
-    elif [[ $1 = 'zypper' ]]; then
-        sudo zypper install -y unzip
-    elif [[ $1 = 'dnf' ]]; then
-        sudo dnf install -y unzip
-    else
-        printf "\n${Red}ERROR:  Unsupported file extension.${Color_Off}\n"
-    fi
-else
-    printf "${Yellow}INFO:  unzip is already installed.${Color_Off}\n"
-fi
-
-
-# Install AWS CLI
-if ! [[ -x "$(which aws)" ]]; then
-    printf "\n${Yellow}INFO:  Installing aws cli utility... ${Color_Off}\n"
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    unzip awscliv2.zip
-    sudo ./aws/install
-    mv /usr/local/bin/aws /usr/local/sbin/aws
-else
-    printf "${Yellow}INFO:  aws cli is already installed.${Color_Off}\n"
-fi
-
-# Retrieve values from Systems Manager Parameter Store
-S1_MGMT_URL=$(aws ssm get-parameters --names S1_MGMT_URL --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
-API_KEY=$(aws ssm get-parameters --names S1_API_KEY --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
-SITE_TOKEN=$(aws ssm get-parameters --names S1_SITE_TOKEN --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
-S1_VERSION_STATUS=$(aws ssm get-parameters --names S1_VERSION_STATUS --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)   # "EA" or "GA"
-
 API_ENDPOINT='/web/api/v2.1/update/agent/packages'
 CURL_OPTIONS='--silent --tlsv1.2'
 FILE_EXTENSION=''
@@ -76,7 +40,39 @@ if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     exit 1;
 fi
 
+# Check if unzip utility is installed
+function unzip_check () {
+    if ! [[ -x "$(which unzip)" ]]; then
+        printf "\n${Yellow}INFO:  Installing unzip utility... ${Color_Off}\n"
+        if [[ $1 = 'apt' ]]; then
+            sudo apt-get update && sudo apt-get install -y unzip
+        elif [[ $1 = 'yum' ]]; then
+            sudo yum install -y unzip
+        elif [[ $1 = 'zypper' ]]; then
+            sudo zypper install -y unzip
+        elif [[ $1 = 'dnf' ]]; then
+            sudo dnf install -y unzip
+        else
+            printf "\n${Red}ERROR:  Unsupported file extension.${Color_Off}\n"
+        fi
+    else
+        printf "${Yellow}INFO:  unzip is already installed.${Color_Off}\n"
+    fi
+}
 
+
+# Check if AWS CLI is installed
+function aws_cli_check () {
+    if ! [[ -x "$(which aws)" ]]; then
+        printf "\n${Yellow}INFO:  Installing aws cli utility... ${Color_Off}\n"
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+        mv /usr/local/bin/aws /usr/local/sbin/aws
+    else
+        printf "${Yellow}INFO:  aws cli is already installed.${Color_Off}\n"
+    fi
+}
 # Check if curl is installed.
 function curl_check () {
     if ! [[ -x "$(which curl)" ]]; then
@@ -98,30 +94,6 @@ function curl_check () {
     fi
 }
 
-# Check if the SITE_TOKEN is in the right format
-if ! [[ ${#SITE_TOKEN} -gt 90 ]]; then
-    printf "\n${Red}ERROR:  Invalid format for SITE_TOKEN: $SITE_TOKEN ${Color_Off}\n"
-    echo "Site Tokens are generally more than 90 characters long and are ASCII encoded."
-    echo ""
-    exit 1
-fi
-
-# Check if the API_KEY is in the right format
-if ! [[ ${#API_KEY} -eq 80 ]]; then
-    printf "\n${Red}ERROR:  Invalid format for API_KEY: $API_KEY ${Color_Off}\n"
-    echo "API Keys are generally 80 characters long and are alphanumeric."
-    echo ""
-    exit 1
-fi
-
-# Check if the VERSION_STATUS is in the right format
-VERSION_STATUS=$(echo $S1_VERSION_STATUS | awk '{print tolower($0)}')
-if [[ ${VERSION_STATUS} != *"ga"* && "$VERSION_STATUS" != *"ea"* ]]; then
-    printf "\n${Red}ERROR:  Invalid format for VERSION_STATUS: $VERSION_STATUS ${Color_Off}\n"
-    echo "The value of VERSION_STATUS must contain either 'ea' or 'ga'"
-    echo ""
-    exit 1
-fi
 
 
 function jq_check () {
@@ -209,10 +181,45 @@ else
     echo ""
 fi
 
+unzip_check $PACKAGE_MANAGER
+aws_cli_check $PACKAGE_MANAGER
 curl_check $PACKAGE_MANAGER
 # Retrieve AWS_REGION from EC2 Instance Metadata URL
 # AWS_REGION=$(TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/placement/region)
 jq_check $PACKAGE_MANAGER
+
+# Retrieve values from Systems Manager Parameter Store
+S1_MGMT_URL=$(aws ssm get-parameters --names S1_MGMT_URL --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
+API_KEY=$(aws ssm get-parameters --names S1_API_KEY --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
+SITE_TOKEN=$(aws ssm get-parameters --names S1_SITE_TOKEN --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
+S1_VERSION_STATUS=$(aws ssm get-parameters --names S1_VERSION_STATUS --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)   # "EA" or "GA"
+
+
+# Check if the SITE_TOKEN is in the right format
+if ! [[ ${#SITE_TOKEN} -gt 90 ]]; then
+    printf "\n${Red}ERROR:  Invalid format for SITE_TOKEN: $SITE_TOKEN ${Color_Off}\n"
+    echo "Site Tokens are generally more than 90 characters long and are ASCII encoded."
+    echo ""
+    exit 1
+fi
+
+# Check if the API_KEY is in the right format
+if ! [[ ${#API_KEY} -eq 80 ]]; then
+    printf "\n${Red}ERROR:  Invalid format for API_KEY: $API_KEY ${Color_Off}\n"
+    echo "API Keys are generally 80 characters long and are alphanumeric."
+    echo ""
+    exit 1
+fi
+
+# Check if the VERSION_STATUS is in the right format
+VERSION_STATUS=$(echo $S1_VERSION_STATUS | awk '{print tolower($0)}')
+if [[ ${VERSION_STATUS} != *"ga"* && "$VERSION_STATUS" != *"ea"* ]]; then
+    printf "\n${Red}ERROR:  Invalid format for VERSION_STATUS: $VERSION_STATUS ${Color_Off}\n"
+    echo "The value of VERSION_STATUS must contain either 'ea' or 'ga'"
+    echo ""
+    exit 1
+fi
+
 sudo curl -H "Accept: application/json" -H "Authorization: ApiToken $API_KEY" "$S1_MGMT_URL$API_ENDPOINT?countOnly=false&packageTypes=Agent&osTypes=linux&sortBy=createdAt&limit=20&fileExtension=$FILE_EXTENSION&sortOrder=desc" > response.txt
 check_api_response
 get_latest_version
