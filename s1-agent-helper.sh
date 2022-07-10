@@ -4,7 +4,7 @@
 # 
 # Usage:    sudo ./s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 # 
-# Version:  1.5
+# Version:  1.6
 ##############################################################################################################
 
 # NOTE:  This version will install the latest EA or GA version of the S1 agent
@@ -30,13 +30,6 @@ Red='\033[0;31m'          # Red
 Green='\033[0;32m'        # Green
 Yellow='\033[0;33m'       # Yellow
 
-
-# Check if running as root
-if [[ $(/usr/bin/id -u) -ne 0 ]]; then
-    printf "\n${Red}ERROR:  This script must be run as root.  Please retry with 'sudo'.${Color_Off}\n"
-    exit 1;
-fi
-
 # Check if correct # of arguments are passed.
 if [ "$#" -ne 4 ]; then
     printf "\n${Red}ERROR:  Incorrect number of arguments were passed.${Color_Off}\n"
@@ -44,6 +37,43 @@ if [ "$#" -ne 4 ]; then
     echo ""
     exit 1
 fi
+
+# Check if running as root
+function check_root () {
+    if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+        printf "\n${Red}ERROR:  This script must be run as root.  Please retry with 'sudo'.${Color_Off}\n"
+        exit 1;
+    fi
+}
+
+
+function check_args () {
+    # Check if the SITE_TOKEN is in the right format
+    if ! [[ ${#SITE_TOKEN} -gt 90 ]]; then
+        printf "\n${Red}ERROR:  Invalid format for SITE_TOKEN: $SITE_TOKEN ${Color_Off}\n"
+        echo "Site Tokens are generally more than 90 characters long and are ASCII encoded."
+        echo ""
+        exit 1
+    fi
+
+    # Check if the API_KEY is in the right format
+    if ! [[ ${#API_KEY} -eq 80 ]]; then
+        printf "\n${Red}ERROR:  Invalid format for API_KEY: $API_KEY ${Color_Off}\n"
+        echo "API Keys are generally 80 characters long and are alphanumeric."
+        echo ""
+        exit 1
+    fi
+
+    # Check VERSION_STATUS for valid values and make sure that the value is in lowercase
+    VERSION_STATUS=$(echo $VERSION_STATUS | tr [A-Z] [a-z])
+    if [[ ${VERSION_STATUS} != *"ga"* && "$VERSION_STATUS" != *"ea"* ]]; then
+        printf "\n${Red}ERROR:  Invalid format for VERSION_STATUS: $VERSION_STATUS ${Color_Off}\n"
+        echo "The value of VERSION_STATUS must contain either 'ea' or 'ga'"
+        echo ""
+        exit 1
+    fi
+}
+
 
 # Check if curl is installed.
 function curl_check () {
@@ -65,31 +95,6 @@ function curl_check () {
         printf "${Yellow}INFO:  curl is already installed.${Color_Off}\n"
     fi
 }
-
-# Check if the SITE_TOKEN is in the right format
-if ! [[ ${#SITE_TOKEN} -gt 90 ]]; then
-    printf "\n${Red}ERROR:  Invalid format for SITE_TOKEN: $SITE_TOKEN ${Color_Off}\n"
-    echo "Site Tokens are generally more than 90 characters long and are ASCII encoded."
-    echo ""
-    exit 1
-fi
-
-# Check if the API_KEY is in the right format
-if ! [[ ${#API_KEY} -eq 80 ]]; then
-    printf "\n${Red}ERROR:  Invalid format for API_KEY: $API_KEY ${Color_Off}\n"
-    echo "API Keys are generally 80 characters long and are alphanumeric."
-    echo ""
-    exit 1
-fi
-
-# Check if the VERSION_STATUS is in the right format
-VERSION_STATUS=$(echo $VERSION_STATUS | tr [A-Z] [a-z])
-if [[ ${VERSION_STATUS} != *"ga"* && "$VERSION_STATUS" != *"ea"* ]]; then
-    printf "\n${Red}ERROR:  Invalid format for VERSION_STATUS: $VERSION_STATUS ${Color_Off}\n"
-    echo "The value of VERSION_STATUS must contain either 'ea' or 'ga'"
-    echo ""
-    exit 1
-fi
 
 
 function jq_check () {
@@ -122,31 +127,32 @@ function check_api_response () {
 }
 
 
-function get_latest_version () {
-    VERSION=''
-    for i in {0..20}; do
-        s=$(cat response.txt | jq -r ".data[$i].status")
-        if [[ $s == *$VERSION_STATUS* ]]; then
-            echo $(cat response.txt | jq -r ".data[$i].version") >> versions.txt
-        fi
-    done
-    VERSION=$(cat versions.txt | sort -t "." -k 1,1 -k 2,2 -k 3,3 -k 4,4 -g | tail -n 1)
-    echo "The latest version is: $VERSION"
-}
-
-function get_latest_version_info () {
-    for i in {0..20}; do
-        s=$(cat response.txt | jq -r ".data[$i].status")
-        if [[ $s == *$VERSION_STATUS* ]]; then
-            if [[ $(cat response.txt | jq -r ".data[$i].version") == $VERSION ]];then
+function find_agent_info_by_architecture () {
+    OS_ARCH=$(uname -p)
+    if [[ $OS_ARCH == "aarch64" ]]; then
+        for i in {0..20}; do
+            FN=$(cat response.txt | jq -r ".data[$i].fileName")
+            if [[ $FN == *$OS_ARCH* ]]; then
                 AGENT_FILE_NAME=$(cat response.txt | jq -r ".data[$i].fileName")
                 AGENT_DOWNLOAD_LINK=$(cat response.txt | jq -r ".data[$i].link")
+                break
             fi
-        fi
-    done
+        done
+    elif [[ $OS_ARCH == "x86_64" ]]; then
+        for i in {0..20}; do
+            FN=$(cat response.txt | jq -r ".data[$i].fileName")
+            if [[ $FN != *"aarch"* ]]; then
+                AGENT_FILE_NAME=$(cat response.txt | jq -r ".data[$i].fileName")
+                AGENT_DOWNLOAD_LINK=$(cat response.txt | jq -r ".data[$i].link")
+                break
+            fi
+        done
+    else
+        printf "\n${Red}ERROR:  OS_ARCH is neither 'aarch64' nor 'x86_64':  $OS_ARCH ${Color_Off}\n"
+    fi
 
     if [[ $AGENT_FILE_NAME = '' ]]; then
-        printf "\n${Red}ERROR:  Could not obtain AGENT_FILE_NAME in get_latest_version function. ${Color_Off}\n"
+        printf "\n${Red}ERROR:  Could not obtain AGENT_FILE_NAME in find_agent_info_by_architecture function. ${Color_Off}\n"
         echo ""
         exit 1
     fi
@@ -154,36 +160,40 @@ function get_latest_version_info () {
 
 
 # Detect if the Linux Platform uses RPM/DEB packages and the correct Package Manager to use
-if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
-    FILE_EXTENSION='.deb'
-    PACKAGE_MANAGER='apt'
-    AGENT_INSTALL_SYNTAX='dpkg -i'
-elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
-    FILE_EXTENSION='.rpm'
-    PACKAGE_MANAGER='yum'
-    AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
-elif (cat /etc/*release |grep 'ID="sles"'); then
-    FILE_EXTENSION='.rpm'
-    PACKAGE_MANAGER='zypper'
-    AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
-elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
-    FILE_EXTENSION='.rpm'
-    PACKAGE_MANAGER='dnf'
-    AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
-else
-    printf "\n${Red}ERROR:  Unknown Release ID: $1 ${Color_Off}\n"
-    cat /etc/*release
-    echo ""
-fi
+function detect_pkg_mgr_info () {
+    if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
+        FILE_EXTENSION='.deb'
+        PACKAGE_MANAGER='apt'
+        AGENT_INSTALL_SYNTAX='dpkg -i'
+    elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
+        FILE_EXTENSION='.rpm'
+        PACKAGE_MANAGER='yum'
+        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
+    elif (cat /etc/*release |grep 'ID="sles"'); then
+        FILE_EXTENSION='.rpm'
+        PACKAGE_MANAGER='zypper'
+        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
+    elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
+        FILE_EXTENSION='.rpm'
+        PACKAGE_MANAGER='dnf'
+        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
+    else
+        printf "\n${Red}ERROR:  Unknown Release ID: $1 ${Color_Off}\n"
+        cat /etc/*release
+        echo ""
+    fi
+}
 
+check_root
+check_args
+detect_pkg_mgr_info
 curl_check $PACKAGE_MANAGER
 jq_check $PACKAGE_MANAGER
-sudo curl -H "Accept: application/json" -H "Authorization: ApiToken $API_KEY" "$S1_MGMT_URL$API_ENDPOINT?countOnly=false&packageTypes=Agent&osTypes=linux&sortBy=createdAt&limit=20&fileExtension=$FILE_EXTENSION&sortOrder=desc" > response.txt
+sudo curl -sH "Accept: application/json" -H "Authorization: ApiToken $API_KEY" "$S1_MGMT_URL$API_ENDPOINT?sortOrder=desc&fileExtension=$FILE_EXTENSION&limit=20&sortBy=version&status=$VERSION_STATUS&platformTypes=linux" > response.txt
 check_api_response
-get_latest_version
-get_latest_version_info
+find_agent_info_by_architecture
 printf "\n${Yellow}INFO:  Downloading $AGENT_FILE_NAME ${Color_Off}\n"
-sudo curl -H "Authorization: ApiToken $API_KEY" $AGENT_DOWNLOAD_LINK -o /tmp/$AGENT_FILE_NAME
+sudo curl -sH "Authorization: ApiToken $API_KEY" $AGENT_DOWNLOAD_LINK -o /tmp/$AGENT_FILE_NAME
 printf "\n${Yellow}INFO:  Installing S1 Agent: $(echo "sudo $AGENT_INSTALL_SYNTAX /tmp/$AGENT_FILE_NAME") ${Color_Off}\n"
 sudo $AGENT_INSTALL_SYNTAX /tmp/$AGENT_FILE_NAME
 printf "\n${Yellow}INFO:  Setting Site Token... ${Color_Off}\n"
