@@ -200,8 +200,7 @@ printf "\n${Yellow}INFO:  Installing S1 Agent: $(echo "sudo $AGENT_INSTALL_SYNTA
 sudo $AGENT_INSTALL_SYNTAX /tmp/$AGENT_FILE_NAME
 printf "\n${Yellow}INFO:  Setting Site Token... ${Color_Off}\n"
 sudo /opt/sentinelone/bin/sentinelctl management token set $SITE_TOKEN
-printf "\n${Yellow}INFO:  Starting Agent... ${Color_Off}\n"
-sudo /opt/sentinelone/bin/sentinelctl control start
+
 
 #clean up files..
 printf "\n${Yellow}INFO:  Cleaning up files... ${Color_Off}\n"
