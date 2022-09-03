@@ -92,7 +92,7 @@ function curl_check () {
             printf "\n${Red}ERROR:  Unsupported package manager: $1.${Color_Off}\n"
         fi
     else
-        printf "${Yellow}INFO:  curl is already installed.${Color_Off}\n"
+        printf "\n${Yellow}INFO:  curl is already installed.${Color_Off}\n"
     fi
 }
 
