@@ -1,21 +1,21 @@
 #!/bin/bash
-##############################################################################################################
-# Description:  Bash script to aid with automating S1 Linux Agent install via AWS Systems Manager
+##################################################################################################################################
+# Description:  Bash script to aid with automating S1 Linux Agent install via AWS Systems Manager and EC2 Image Builder
 #
-# Pre-requisites: EC2 instances must have IAM permissions to access Systems Manager (ie: AmazonEC2RoleforSSM)
+# Pre-requisites: Build instances must have IAM permissions (ie: AmazonSSMManagedInstanceCore + EC2InstanceProfileForImageBuilder)
 # 
 # Version:  1.1
-##############################################################################################################
+##################################################################################################################################
 
 
-# NOTE:  This version will install the latest EA or GA version of the SentinelOne Linux agent
-# NOTE:  This script will install the curl and jq utilities if not already installed.
+# NOTE:  This script will install the latest EA or GA version of the SentinelOne Linux agent and set a Site Token.
+# NOTE:  This script WILL NOT ACTIVATE the agent in order to avoid duplicate UUIDs from AMI builds.
+# NOTE:  This script will install the curl, jq and awscli utilities if not already installed.
 
 # References:
-# - https://docs.aws.amazon.com/systems-manager/latest/userguide/integration-s3.html
+# - https://docs.aws.amazon.com/imagebuilder/latest/userguide/what-is-image-builder.html
+# - https://docs.aws.amazon.com/imagebuilder/latest/userguide/start-build-image-pipeline.html
 
-# CUSTOMIZE THE VALUE OF AWS_REGION TO FIT YOUR SSM ENVIRONMENT
-#AWS_REGION=us-east-1
 
 # Retrieve AWS_REGION from EC2 Instance Metadata URL
 AWS_REGION=$(TOKEN=`curl -sX PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -sH "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/region)
@@ -50,27 +50,6 @@ function check_root () {
     fi
 }
 
-# Check if curl is installed.
-function curl_check () {
-    if ! [[ -x "$(which curl)" ]]; then
-        printf "\n${Yellow}INFO:  Installing curl utility in order to interact with S1 API... ${Color_Off}\n"
-        if [[ $1 = 'apt' ]]; then
-            sudo apt-get update && sudo apt-get install -y curl
-        elif [[ $1 = 'yum' ]]; then
-            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-            sudo yum install -y curl
-        elif [[ $1 = 'zypper' ]]; then
-            sudo zypper install -y curl
-        elif [[ $1 = 'dnf' ]]; then
-            sudo dnf install -y curl
-        else
-            printf "\n${Red}ERROR:  Unsupported file extension.${Color_Off}\n"
-        fi
-    else
-        printf "\n${Yellow}INFO:  curl is already installed.${Color_Off}\n"
-    fi
-}
-
 function check_args () {
     # Check if the SITE_TOKEN is in the right format
     if ! [[ ${#SITE_TOKEN} -gt 90 ]]; then
@@ -98,12 +77,57 @@ function check_args () {
     fi
 }
 
+# Detect if the Linux Platform uses RPM/DEB packages and the correct Package Manager to use
+function detect_pkg_mgr_info () {
+    if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
+        FILE_EXTENSION='.deb'
+        PACKAGE_MANAGER='apt'
+        AGENT_INSTALL_SYNTAX='dpkg -i'
+    elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
+        FILE_EXTENSION='.rpm'
+        PACKAGE_MANAGER='yum'
+        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
+    elif (cat /etc/*release |grep 'ID="sles"'); then
+        FILE_EXTENSION='.rpm'
+        PACKAGE_MANAGER='zypper'
+        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
+    elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
+        FILE_EXTENSION='.rpm'
+        PACKAGE_MANAGER='dnf'
+        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
+    else
+        printf "\n${Red}ERROR:  Unknown Release ID: $1 ${Color_Off}\n"
+        cat /etc/*release
+        echo ""
+    fi
+}
+
+# Check if curl is installed.
+function curl_check () {
+    if ! [[ -x "$(which curl)" ]]; then
+        printf "\n${Yellow}INFO:  Installing curl utility in order to interact with S1 API... ${Color_Off}\n"
+        if [[ $1 = 'apt' ]]; then
+            sudo apt-get update && sudo apt-get install -y curl
+        elif [[ $1 = 'yum' ]]; then
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum install -y curl
+        elif [[ $1 = 'zypper' ]]; then
+            sudo zypper install -y curl
+        elif [[ $1 = 'dnf' ]]; then
+            sudo dnf install -y curl
+        else
+            printf "\n${Red}ERROR:  Unsupported file extension.${Color_Off}\n"
+        fi
+    else
+        printf "\n${Yellow}INFO:  curl is already installed.${Color_Off}\n"
+    fi
+}
 
 function jq_check () {
     if ! [[ -x "$(which jq)" ]]; then
         printf "\n${Yellow}INFO:  Installing jq utility in order to parse json responses from api... ${Color_Off}\n"
         if [[ $1 = 'apt' ]]; then
-            sudo apt-get update && sudo apt-get install -y jq
+            sudo apt update && sudo apt install -y jq
         elif [[ $1 = 'yum' ]]; then
             sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
             sudo yum install -y jq
@@ -119,6 +143,25 @@ function jq_check () {
     fi
 }
 
+function awscli_check () {
+    if ! [[ -x "$(which aws)" ]]; then
+        printf "\n${Yellow}INFO:  Installing awscli utility in order to communicate with Systems Manager Parameter Store... ${Color_Off}\n"
+        if [[ $1 = 'apt' ]]; then
+            sudo apt update && sudo apt install -y awscli
+        elif [[ $1 = 'yum' ]]; then
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum install -y awscli
+        elif [[ $1 = 'zypper' ]]; then
+            sudo zypper install -y awscli
+        elif [[ $1 = 'dnf' ]]; then
+            sudo dnf install -y awscli
+        else
+            printf "\n${Red}ERROR:  unsupported file extension: $1 ${Color_Off}\n"
+        fi 
+    else
+        printf "\n${Yellow}INFO:  awscli is already installed.${Color_Off}\n"
+    fi
+}
 
 function check_api_response () {
     if [[ $(cat response.txt | jq 'has("errors")') == 'true' ]]; then
@@ -161,36 +204,14 @@ function find_agent_info_by_architecture () {
 }
 
 
-# Detect if the Linux Platform uses RPM/DEB packages and the correct Package Manager to use
-function detect_pkg_mgr_info () {
-    if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
-        FILE_EXTENSION='.deb'
-        PACKAGE_MANAGER='apt'
-        AGENT_INSTALL_SYNTAX='dpkg -i'
-    elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
-        FILE_EXTENSION='.rpm'
-        PACKAGE_MANAGER='yum'
-        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
-    elif (cat /etc/*release |grep 'ID="sles"'); then
-        FILE_EXTENSION='.rpm'
-        PACKAGE_MANAGER='zypper'
-        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
-    elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
-        FILE_EXTENSION='.rpm'
-        PACKAGE_MANAGER='dnf'
-        AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
-    else
-        printf "\n${Red}ERROR:  Unknown Release ID: $1 ${Color_Off}\n"
-        cat /etc/*release
-        echo ""
-    fi
-}
+
 
 check_root
 check_args
 detect_pkg_mgr_info
 curl_check $PACKAGE_MANAGER
 jq_check $PACKAGE_MANAGER
+awscli_check $PACKAGE_MANAGER
 sudo curl -sH "Accept: application/json" -H "Authorization: ApiToken $API_KEY" "$S1_MGMT_URL$API_ENDPOINT?countOnly=false&packageTypes=Agent&osTypes=linux&sortBy=createdAt&limit=20&fileExtension=$FILE_EXTENSION&sortOrder=desc" > response.txt
 check_api_response
 find_agent_info_by_architecture
