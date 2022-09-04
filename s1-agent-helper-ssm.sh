@@ -20,12 +20,10 @@
 # Retrieve AWS_REGION from EC2 Instance Metadata URL
 AWS_REGION=$(TOKEN=`curl -sX PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -sH "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/region)
 
-# Retrieve values from Systems Manager Parameter Store
-S1_MGMT_URL=$(aws ssm get-parameters --names S1_MGMT_URL --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
-API_KEY=$(aws ssm get-parameters --names S1_API_KEY --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
-SITE_TOKEN=$(aws ssm get-parameters --names S1_SITE_TOKEN --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
-VERSION_STATUS=$(aws ssm get-parameters --names S1_VERSION_STATUS --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)   # "EA" or "GA"
-
+S1_MGMT_URL=''
+API_KEY=''
+SITE_TOKEN=''
+VERSION_STATUS=''
 API_ENDPOINT='/web/api/v2.1/update/agent/packages'
 CURL_OPTIONS='--silent --tlsv1.2'
 FILE_EXTENSION=''
@@ -48,6 +46,14 @@ function check_root () {
         printf "\n${Red}ERROR:  This script must be run as root.  Please retry with 'sudo'.${Color_Off}\n"
         exit 1;
     fi
+}
+
+function get_parameter_store_values () {
+    # Retrieve values from Systems Manager Parameter Store
+    S1_MGMT_URL=$(aws ssm get-parameters --names S1_MGMT_URL --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
+    API_KEY=$(aws ssm get-parameters --names S1_API_KEY --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
+    SITE_TOKEN=$(aws ssm get-parameters --names S1_SITE_TOKEN --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)
+    VERSION_STATUS=$(aws ssm get-parameters --names S1_VERSION_STATUS --with-decryption --region $AWS_REGION --query "Parameters[*].Value" --output text)   # "EA" or "GA"
 }
 
 # Check if curl is installed.
@@ -160,6 +166,25 @@ function find_agent_info_by_architecture () {
     fi
 }
 
+function awscli_check () {
+    if ! [[ -x "$(which aws)" ]]; then
+        printf "\n${Yellow}INFO:  Installing awscli utility in order to communicate with Systems Manager Parameter Store... ${Color_Off}\n"
+        if [[ $1 = 'apt' ]]; then
+            sudo apt update && sudo apt install -y awscli
+        elif [[ $1 = 'yum' ]]; then
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum install -y awscli
+        elif [[ $1 = 'zypper' ]]; then
+            sudo zypper install -y awscli
+        elif [[ $1 = 'dnf' ]]; then
+            sudo dnf install -y awscli
+        else
+            printf "\n${Red}ERROR:  unsupported file extension: $1 ${Color_Off}\n"
+        fi 
+    else
+        printf "\n${Yellow}INFO:  awscli is already installed.${Color_Off}\n"
+    fi
+}
 
 # Detect if the Linux Platform uses RPM/DEB packages and the correct Package Manager to use
 function detect_pkg_mgr_info () {
@@ -187,8 +212,10 @@ function detect_pkg_mgr_info () {
 }
 
 check_root
-check_args
 detect_pkg_mgr_info
+awscli_check $PACKAGE_MANAGER
+get_parameter_store_values
+check_args
 curl_check $PACKAGE_MANAGER
 jq_check $PACKAGE_MANAGER
 sudo curl -sH "Accept: application/json" -H "Authorization: ApiToken $API_KEY" "$S1_MGMT_URL$API_ENDPOINT?countOnly=false&packageTypes=Agent&osTypes=linux&sortBy=createdAt&limit=20&fileExtension=$FILE_EXTENSION&sortOrder=desc" > response.txt
