@@ -115,7 +115,6 @@ function curl_check () {
         if [[ $1 = 'apt' ]]; then
             sudo apt-get update && sudo apt-get install -y curl
         elif [[ $1 = 'yum' ]]; then
-            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
             sudo yum install -y curl
         elif [[ $1 = 'zypper' ]]; then
             sudo zypper install -y curl
@@ -135,7 +134,6 @@ function jq_check () {
         if [[ $1 = 'apt' ]]; then
             sudo apt update && sudo apt install -y jq
         elif [[ $1 = 'yum' ]]; then
-            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
             sudo yum install -y jq
         elif [[ $1 = 'zypper' ]]; then
             sudo zypper install -y jq
@@ -149,14 +147,43 @@ function jq_check () {
     fi
 }
 
+function unzip_check () {
+    if ! [[ -x "$(which unzip)" ]]; then
+        printf "\n${Yellow}INFO:  Installing unzip utility in order to install awscli... ${Color_Off}\n"
+        if [[ $1 = 'apt' ]]; then
+            sudo apt-get update && sudo apt-get install -y unzip
+        elif [[ $1 = 'yum' ]]; then
+            sudo yum install -y unzip
+        elif [[ $1 = 'zypper' ]]; then
+            sudo zypper install -y unzip
+        elif [[ $1 = 'dnf' ]]; then
+            sudo dnf install -y unzip
+        else
+            printf "\n${Red}ERROR:  unsupported file extension: $1 ${Color_Off}\n"
+        fi 
+    else
+        printf "\n${Yellow}INFO:  unzip is already installed.${Color_Off}\n"
+    fi
+}
+
 function awscli_check () {
     if ! [[ -x "$(which aws)" ]]; then
-        printf "\n${Yellow}INFO:  Installing awscli utility in order to communicate with Systems Manager Parameter Store... ${Color_Off}\n"
+        printf "\n${Yellow}INFO:  Installing awscli utility in order to communicate with Systems Manager Parameter Store... ${Color_Off}\n"     
         if [[ $1 = 'apt' ]]; then
             sudo apt update && sudo apt install -y awscli
         elif [[ $1 = 'yum' ]]; then
-            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-            sudo yum install -y awscli
+            unzip_check  $PACKAGE_MANAGER
+            OS_ARCH=$(uname -p)
+            if [[ $OS_ARCH == "x86_64" ]]; then
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip awscliv2.zip
+            elif [[ $OS_ARCH == "aarch64" ]]; then
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+                unzip awscliv2.zip
+            else
+                printf "\n${Red}ERROR:  OS_ARCH is neither 'aarch64' nor 'x86_64':  $OS_ARCH ${Color_Off}\n"
+            fi
+            sudo ./aws/install --bin-dir /usr/bin --update
         elif [[ $1 = 'zypper' ]]; then
             sudo zypper install -y awscli
         elif [[ $1 = 'dnf' ]]; then
