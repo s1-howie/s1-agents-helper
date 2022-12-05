@@ -43,13 +43,22 @@ Set-ExecutionPolicy Unrestricted
 ```
 
 # Usage within GCP Compute Engine
-When manually creating a new Compute Engine instance, expand "Management, security, disks, networking, sole tenance" and Copy/Paste the following into the 'Startup script' textarea.
+## Linux-based instances
+When manually creating a new Compute Engine instance, expand "Advanced Options (Networking, disks, security, management, sole-tenancy") and then expand the Management subsection.  Copy/Paste the following into the Automation 'Startup script' textarea.
 Be sure to replace the S1_CONSOLE_PREFIX (ie: usea1-011), API_KEY, SITE_TOKEN and VERSION_STATUS (ie: GA or EA) values with appropriate values:
 ```
 #!/bin/bash
 sudo curl -L "https://raw.githubusercontent.com/s1-howie/s1-agents-helper/master/s1-agent-helper.sh" -o s1-agent-helper.sh
 sudo chmod +x s1-agent-helper.sh
 sudo ./s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
+```
+## Windows-based instances
+When manually creating a new Compute Engine Windows Server instance, expand "Advanced Options (Networking, disks, security, management, sole-tenancy") and then expand the Management subsection.  Create new Metadata with "Key 1" set to `sysprep-specialize-script-ps1` and Copy/Paste the following into the "Value 1" textarea.
+Be sure to replace the S1_CONSOLE_PREFIX (ie: usea1-011), API_KEY, SITE_TOKEN and VERSION_STATUS (ie: GA or EA) values with appropriate values:
+```
+Set-ExecutionPolicy Unrestricted -Force
+(new-object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/s1-howie/s1-agents-helper/master/s1-agent-helper.ps1", "$env:TEMP\s1-agent-helper.ps1")
+& "$env:TEMP\s1-agent-helper.ps1" S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 ```
 
 # Usage within Azure Virtual Machines
