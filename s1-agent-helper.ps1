@@ -95,7 +95,7 @@ $wc.DownloadFile($agent_download_link, "$env:TEMP\$agent_file_name")
 
 # If the agent package is version 22.1+, use the new CLI installation syntax
 if ($agent_package_major_version -ge "22.1") {
-    & "$env:TEMP\$agent_file_name" -t $site_token
+    & "$env:TEMP\$agent_file_name" -t $site_token -q
 }
 else {
     #Execute the older EXE package
