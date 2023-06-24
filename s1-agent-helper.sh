@@ -4,7 +4,7 @@
 # 
 # Usage:    sudo ./s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
 # 
-# Version:  1.6
+# Version:  1.7
 ##############################################################################################################
 
 # NOTE:  This version will install the latest EA or GA version of the S1 agent
@@ -138,7 +138,7 @@ function find_agent_info_by_architecture () {
                 break
             fi
         done
-    elif [[ $OS_ARCH == "x86_64" ]]; then
+    elif [[ $OS_ARCH == "x86_64" || $OS_ARCH == "unknown" ]]; then
         for i in {0..20}; do
             FN=$(cat response.txt | jq -r ".data[$i].fileName")
             if [[ $FN != *"aarch"* ]]; then
