@@ -80,7 +80,7 @@ function curl_check () {
     if ! [[ -x "$(which curl)" ]]; then
         printf "\n${Yellow}INFO:  Installing curl utility in order to interact with S1 API... ${Color_Off}\n"
         if [[ $1 = 'apt' ]]; then
-            sudo apt update -y && sudo apt install -y  curl
+            sudo apt-get update && sudo apt-get install -y curl
         elif [[ $1 = 'yum' ]]; then
             sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
             sudo yum install -y curl
@@ -101,7 +101,7 @@ function jq_check () {
     if ! [[ -x "$(which jq)" ]]; then
         printf "\n${Yellow}INFO:  Installing jq utility in order to parse json responses from api... ${Color_Off}\n"
         if [[ $1 = 'apt' ]]; then
-            sudo apt update -y && sudo apt install -y jq
+            sudo apt-get update && sudo apt-get install -y jq
         elif [[ $1 = 'yum' ]]; then
             sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
             sudo yum install -y jq
