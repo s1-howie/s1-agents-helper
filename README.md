@@ -6,10 +6,10 @@ This script can be downloaded and executed manually or via script.
 
 Note: The concept of this script could easily be modified for usage within configuration management tools (Ansible, Chef, Puppet, etc.)
 
-For more info, please refer to:  https://support.sentinelone.com/hc/en-us/articles/4414520321047-Installing-the-Linux-Agent
+For more info, please refer to:  [Installing the Linux Agent](https://community.sentinelone.com/s/article/000004908)
 
 # Pre-Requisites
-You must have 'curl' installed on your target Linux host
+You must have `curl` installed on your target Linux host
 
 # Manual Usage
 1. Download the 's1-agent-helper.sh' script
@@ -23,7 +23,11 @@ sudo ./s1-agent-helper.sh usea1-purple eEBKU8tXIEaDy4vezc9MHeru6ElrA3pJaNIY2eg7a
 ```
 
 # Usage within AWS EC2 User Data
-When manually launching a new EC2 Instance.. During 'Step 3: Configure Instance Details', Copy/Paste the following into the 'User data' text area.
+When manually launching a new EC2 Instance... 
+
+During 'Step 3: Configure Instance Details', Copy/Paste the following into the 'User data' text area.
+
+
 Be sure to replace the S1_CONSOLE_PREFIX (ie: usea1-011), API_KEY, SITE_TOKEN and VERSION_STATUS (ie: GA or EA) values with appropriate values:
 ## Linux-based instances
 ```
