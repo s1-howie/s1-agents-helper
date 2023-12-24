@@ -16,6 +16,23 @@ S1_AGENT_TAG=$4
 
 S1_AGENT_LOG_LEVEL="${5:-info}"  # Please use the default of 'info' for production deployments.
 
+K8S_TYPE="${6:-k8s}"
+case $K8S_TYPE in
+  k8s)
+  echo "regular k8s"
+  ;;
+
+  openshift)
+  OPENSHIFT='true'
+  echo "openshift"
+  ;;
+
+  fargate)
+  FARGATE='true'
+  echo "fargate"
+  ;;
+esac
+
 # We derive the helm release/chart version from the SentinelOne Agent version/tag + set the s1helper tag to be the same as the s1agent tag.
 HELM_RELEASE_VERSION=$(echo $S1_AGENT_TAG | cut -d "-" -f1) # ie: 23.4.1
 S1_HELPER_TAG=$S1_AGENT_TAG
@@ -178,6 +195,7 @@ helm upgrade --install ${HELM_RELEASE_NAME} --namespace=${S1_NAMESPACE} --versio
     --set configuration.env.agent.log_level=${S1_AGENT_LOG_LEVEL} \
     --set configuration.proxy=${S1_PROXY} \
     --set configuration.dv_proxy=${S1_DV_PROXY} \
+    ${OPENSHIFT:+--set configuration.platform.type=openshift} \
     sentinelone/s1-agent
 
 # Check the status of the pods
