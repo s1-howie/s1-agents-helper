@@ -112,6 +112,12 @@ if ! [ ${#S1_REGISTRY_PASSWORD} -gt 160 ]; then
     exit 1
 fi
 
+# Check if the value of S1_AGENT_TAG is in the right format
+if !  echo $S1_AGENT_TAG | grep -e '^\d\d\.\d\.\d-[ge]a$' &> /dev/null ; then
+    printf "\n${Red}ERROR:  That value passed for S1_AGENT_TAG is not in the correct format.  Examples of valid values are:  23.3.2-ga and 23.4.1-ea \n${Color_Off}"
+    exit 1
+fi
+
 # Get cluster name from the current context
 CLUSTER_NAME=$(kubectl config view --minify -o jsonpath='{.clusters[].name}')
 printf "\n${Purple}Cluster Name:  $CLUSTER_NAME\n${Color_Off}"
