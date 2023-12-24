@@ -114,7 +114,7 @@ fi
 
 # Check if the value of S1_AGENT_TAG is in the right format
 if !  echo $S1_AGENT_TAG | grep -e '^\d\d\.\d\.\d-[ge]a$' &> /dev/null ; then
-    printf "\n${Red}ERROR:  That value passed for S1_AGENT_TAG is not in the correct format.  Examples of valid values are:  23.3.2-ga and 23.4.1-ea \n${Color_Off}"
+    printf "\n${Red}ERROR:  The value passed for S1_AGENT_TAG is not in the correct format.  Examples of valid values are:  23.3.2-ga and 23.4.1-ea \n\n${Color_Off}"
     exit 1
 fi
 
