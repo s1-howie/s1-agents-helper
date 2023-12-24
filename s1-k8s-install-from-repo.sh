@@ -118,6 +118,13 @@ if !  echo $S1_AGENT_TAG | grep -e '^\d\d\.\d\.\d-[ge]a$' &> /dev/null ; then
     exit 1
 fi
 
+# Check if the value of S1_AGENT_LOG_LEVEL is trace, debug, info (default), warning, error or fatal.  If not, it's invalid.
+if ! echo $S1_AGENT_LOG_LEVEL | grep -E '^(trace|debug|info|warning|error|fatal)$'  &> /dev/null ; then
+    printf "\n${Red}ERROR:  The value passed for S1_AGENT_LOG_LEVEL does not contain a valid valude.  Valid values are trace, debug, info (default), warning, error or fatal. \n\n${Color_Off}"
+    exit 1
+fi
+
+
 # Get cluster name from the current context
 CLUSTER_NAME=$(kubectl config view --minify -o jsonpath='{.clusters[].name}')
 printf "\n${Purple}Cluster Name:  $CLUSTER_NAME\n${Color_Off}"
