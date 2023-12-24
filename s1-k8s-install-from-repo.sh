@@ -2,21 +2,21 @@
 # This script automates the steps discussed in: 
 # https://community.sentinelone.com/s/article/000006134
 
-# NOTE: Please be aware that there is a 100 pulls/hour rate limit for the repository!!
+# NOTE: Please be aware that there is a 100 pulls/hour rate limit for the SentinelOne repository!!
 
 # Please provide a value for the S1_SITE_TOKEN:
 S1_SITE_TOKEN=$1
 
-# Please provide values for your registry username and password
+# Please provide values for your SentinelOne registry username and password.
 S1_REGISTRY_USERNAME=$2
 S1_REGISTRY_PASSWORD=$3
 
-# The value of the S1_AGENT_TAG controls the version of the agent. ie: 23.3.2-ga, 23.4.1-ea, etc
+# The value of the S1_AGENT_TAG controls the version of the agent. ie: 23.3.2-ga, 23.4.1-ea, etc.
 S1_AGENT_TAG=$4
 
-S1_AGENT_LOG_LEVEL="${5:-info}"  # Please use the default of'info' for production deployments
+S1_AGENT_LOG_LEVEL="${5:-info}"  # Please use the default of 'info' for production deployments.
 
-# We derive the helm release/chart version from the SentinelOne Agent version/tag + set the s1helper tag to be the same as the s1agent tag
+# We derive the helm release/chart version from the SentinelOne Agent version/tag + set the s1helper tag to be the same as the s1agent tag.
 HELM_RELEASE_VERSION=$(echo $S1_AGENT_TAG | cut -d "-" -f1) # ie: 23.4.1
 S1_HELPER_TAG=$S1_AGENT_TAG
 
