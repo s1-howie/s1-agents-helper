@@ -196,7 +196,7 @@ helm upgrade --install ${HELM_RELEASE_NAME} --namespace=${S1_NAMESPACE} --versio
     --set configuration.proxy=${S1_PROXY} \
     --set configuration.dv_proxy=${S1_DV_PROXY} \
     ${OPENSHIFT:+--set configuration.platform.type=openshift} \
-    ${FARGATE:+--set configuration.env.injection.enabled=true --set helper.labels.Application="sentinelone" --set configuration.env.agent.pod_uid=0 --set configuration.env.agent.pod_gid=0}
+    ${FARGATE:+--set configuration.env.injection.enabled=true --set helper.labels.Application="sentinelone" --set configuration.env.agent.pod_uid=0 --set configuration.env.agent.pod_gid=0} \
     sentinelone/s1-agent
 
 # Check the status of the pods
