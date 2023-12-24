@@ -97,7 +97,7 @@ if ! echo $S1_SITE_TOKEN | base64 -d | grep sentinelone.net &> /dev/null ; then
 fi
 
 # Check if the value of S1_REGISTRY_USERNAME is in the right format
-if !  echo $S1_REGISTRY_USERNAME | base64 -d | grep -E '^\d+\:(aws|gcp)\:[a-zA-Z0-9-]+\:\d{18,19}$' &> /dev/null ; then
+if ! echo $S1_REGISTRY_USERNAME | base64 -d | grep -E '^\d+\:(aws|gcp)\:[a-zA-Z0-9-]+\:\d{18,19}$' &> /dev/null ; then
     printf "\n${Red}ERROR:  That value passed for S1_REGISTRY_USERNAME does not decode correctly.  Please ensure that you've passed a valid Registry Username as the second argument to the script. \n${Color_Off}"
     printf "\nFor instructions on obtaining ${Purple}Registry Credentials${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
     printf "    ${Purple}https://community.sentinelone.com/s/article/000008771 ${Color_Off} \n\n"
@@ -113,7 +113,7 @@ if ! [ ${#S1_REGISTRY_PASSWORD} -gt 160 ]; then
 fi
 
 # Check if the value of S1_AGENT_TAG is in the right format
-if !  echo $S1_AGENT_TAG | grep -e '^\d\d\.\d\.\d-[ge]a$' &> /dev/null ; then
+if ! echo $S1_AGENT_TAG | grep -e '^\d\d\.\d\.\d-[ge]a$' &> /dev/null ; then
     printf "\n${Red}ERROR:  The value passed for S1_AGENT_TAG is not in the correct format.  Examples of valid values are:  23.3.2-ga and 23.4.1-ea \n\n${Color_Off}"
     exit 1
 fi
@@ -123,9 +123,6 @@ if ! echo $S1_AGENT_LOG_LEVEL | grep -E '^(trace|debug|info|warning|error|fatal)
     printf "\n${Red}ERROR:  The value passed for S1_AGENT_LOG_LEVEL does not contain a valid valude.  Valid values are trace, debug, info (default), warning, error or fatal. \n\n${Color_Off}"
     exit 1
 fi
-
-
-printf "\n${Purple}$BANNER\n${Color_Off}"
 
 # Get cluster name from the current context
 CLUSTER_NAME=$(kubectl config view --minify -o jsonpath='{.clusters[].name}')
