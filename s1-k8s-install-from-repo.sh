@@ -14,7 +14,7 @@ S1_REGISTRY_PASSWORD=$3
 # The value of the S1_AGENT_TAG controls the version of the agent. ie: 23.3.2-ga, 23.4.1-ea, etc
 S1_AGENT_TAG=$4
 
-S1_AGENT_LOG_LEVEL="${$5:-info}"  # Please use the default of'info' for production deployments
+S1_AGENT_LOG_LEVEL="${5:-info}"  # Please use the default of'info' for production deployments
 
 # We derive the helm release/chart version from the SentinelOne Agent version/tag + set the s1helper tag to be the same as the s1agent tag
 HELM_RELEASE_VERSION=$(echo $S1_AGENT_TAG | cut -d "-" -f1) # ie: 23.4.1
