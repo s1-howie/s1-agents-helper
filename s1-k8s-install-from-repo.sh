@@ -89,7 +89,7 @@ if [ $# -lt 4 ]; then
 fi
 
 # Check if Site Token is in the right format
-if ! [ echo $S1_SITE_TOKEN | base64 -d | grep sentinelone.net &> /dev/null ]; then
+if ! [[ echo $S1_SITE_TOKEN | base64 -d | grep sentinelone.net &> /dev/null ]]; then
     printf "\n${Red}ERROR:  Site Token does not decode correctly.  Please ensure that you've passed a valid Site Token as the first argument to the script. \n${Color_Off}"
     printf "\nFor instructions on obtaining a ${Purple}Site Token${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
     printf "    ${Purple}https://community.sentinelone.com/s/article/000004904 ${Color_Off} \n\n"
