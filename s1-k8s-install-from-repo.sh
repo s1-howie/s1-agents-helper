@@ -81,10 +81,18 @@ if [ $# -lt 4 ]; then
     printf "\n${Red}ERROR:  Expecting at least 4 arguments to be passed. \n${Color_Off}"
     printf "Example usage: \n"
     printf "ie:${Green}  $0 \$S1_SITE_TOKEN \$S1_REGISTRY_USERNAME \$S1_REGISTRY_PASSWORD 23.4.1-ea debug \n${Color_Off}"
-    printf "\nFor instructions on obtaining a Site Token from the SentinelOne management console, please see the following KB article:\n"
-    printf "    https://community.sentinelone.com/s/article/000004904 \n\n"
-    printf "\nFor instructions on obtaining Registry Credentials from the SentinelOne management console, please see the following KB article:\n"
-    printf "    https://community.sentinelone.com/s/article/000008771 \n\n"
+    printf "\nFor instructions on obtaining a ${Purple}Site Token${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
+    printf "    ${Purple}https://community.sentinelone.com/s/article/000004904 ${Color_Off} \n\n"
+    printf "\nFor instructions on obtaining ${Purple}Registry Credentials${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
+    printf "    ${Purple}https://community.sentinelone.com/s/article/000008771 ${Color_Off} \n\n"
+    exit 1
+fi
+
+# Check if Site Token is in the right format
+if ! [ echo $S1_SITE_TOKEN | base64 -d | grep sentinelone.net ]; then
+    printf "\n${Red}ERROR:  Site Token does not decode correctly.  Please ensure that you've passed a valid Site Token as the first argument to the script. \n${Color_Off}"
+    printf "\nFor instructions on obtaining a ${Purple}Site Token${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
+    printf "    ${Purple}https://community.sentinelone.com/s/article/000004904 ${Color_Off} \n\n"
     exit 1
 fi
 
