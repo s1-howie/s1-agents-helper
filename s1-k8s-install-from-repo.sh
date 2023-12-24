@@ -129,11 +129,13 @@ fi
 CLUSTER_NAME=$(kubectl config view --minify -o jsonpath='{.clusters[].name}')
 printf "\n${Purple}Cluster Name:  $CLUSTER_NAME\n${Color_Off}"
 
-# Create namespace for S1 resources
+# Create namespace for S1 resources (if it doesn't already exist)
 printf "\n${Purple}Creating namespace...\n${Color_Off}"
-kubectl create namespace ${S1_NAMESPACE}
+if ! kubectl get ns ${S1_NAMESPACE} &> /dev/null ; then
+    kubectl create namespace ${S1_NAMESPACE}
+fi
 
-# Create Kubernetes secret to house the credentials for accessing the container registry repos
+# Create Kubernetes secret to house the credentials used to access the container registry repos
 printf "\n${Purple}Creating K8s secret ${S1_PULL_SECRET_NAME}...\n${Color_Off}"
 if ! kubectl get secret ${S1_PULL_SECRET_NAME} -n ${S1_NAMESPACE} &> /dev/null ; then
     printf "\n${Purple}Creating secret for S1 image download in K8s...\n${Color_Off}"
@@ -145,9 +147,11 @@ fi
 
 # Add the SentinelOne helm repo
 printf "\n${Purple}Adding SentinelOne Helm Repo...\n${Color_Off}"
-helm repo add sentinelone https://charts.sentinelone.com
+if ! helm repo list | grep sentinelone &> /dev/null ; then
+    helm repo add sentinelone https://charts.sentinelone.com
+fi
 
-# Ensure we're using the latest chart
+# Ensure we have the latest charts
 printf "\n${Purple}Running helm repo update...\n${Color_Off}"
 helm repo update
 
