@@ -80,7 +80,7 @@ fi
 if [ $# -lt 4 ]; then
     printf "\n${Red}ERROR:  Expecting at least 4 arguments to be passed. \n${Color_Off}"
     printf "Example usage: \n"
-    printf "ie:${Green}  $0 $S1_SITE_TOKEN $S1_REGISTRY_USERNAME $S1_REGISTRY_PASSWORD 23.4.1-ea debug \n${Color_Off}"
+    printf "ie:${Green}  $0 \$S1_SITE_TOKEN \$S1_REGISTRY_USERNAME \$S1_REGISTRY_PASSWORD 23.4.1-ea debug \n${Color_Off}"
     printf "\nFor instructions on obtaining a Site Token from the SentinelOne management console, please see the following KB article:\n"
     printf "    https://community.sentinelone.com/s/article/000004904 \n\n"
     printf "\nFor instructions on obtaining Registry Credentials from the SentinelOne management console, please see the following KB article:\n"
