@@ -163,22 +163,9 @@ function install_using_apt () {
 function install_using_yum () {
     echo "installing with yum..."
     S1_REPOSITORY_URL="rpm.sentinelone.net"
-
-    yum -y update
-
+    #yum -y update
     rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-    
-    # remove /etc/yum.repos.d/sentinel-registry-ga.repo if it exists already
-    #rm -f /etc/yum.repos.d/sentinel-registry-ga.repo
 
-#     echo -e "[yum-ga]\n\
-# name=yum-ga\n\
-# baseurl=https://${S1_REPOSITORY_URL}/yum-ga\n\
-# enabled=1\n\
-# repo_gpgcheck=0\n\
-# gpgcheck=0\n\
-# username=${S1_REPOSITORY_USERNAME}\n\
-# password=${S1_REPOSITORY_PASSWORD}" > /etc/yum.repos.d/sentinel-registry-ga.repo \
     cat <<- EOF > /etc/yum.repos.d/sentinel-registry-ga.repo
 [yum-ga]
 name=yum-ga
@@ -190,17 +177,16 @@ username=${S1_REPOSITORY_USERNAME}
 password=${S1_REPOSITORY_PASSWORD}
 EOF
 
-    # remove /etc/yum.repos.d/sentinel-registry-ea.repo if it exists already
-    rm -f /etc/yum.repos.d/sentinel-registry-ea.repo
-
-    echo -e "[yum-ea]\n\
-name=yum-ea\n\
-baseurl=https://${S1_REPOSITORY_URL}/yum-ea\n\
-enabled=1\n\
-repo_gpgcheck=0\n\
-gpgcheck=0\n\
-username=${S1_REPOSITORY_USERNAME}\n\
-password=${S1_REPOSITORY_PASSWORD}" > /etc/yum.repos.d/sentinel-registry-ea.repo
+    cat <<- EOF > /etc/yum.repos.d/sentinel-registry-ea.repo
+[yum-ea]
+name=yum-ea
+baseurl=https://${S1_REPOSITORY_URL}/yum-ea
+enabled=1
+repo_gpgcheck=0
+gpgcheck=0
+username=${S1_REPOSITORY_USERNAME}
+password=${S1_REPOSITORY_PASSWORD}
+EOF
 
     yum makecache
     yum install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
