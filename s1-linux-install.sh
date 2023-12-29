@@ -180,14 +180,14 @@ function install_using_yum () {
 # username=${S1_REPOSITORY_USERNAME}\n\
 # password=${S1_REPOSITORY_PASSWORD}" > /etc/yum.repos.d/sentinel-registry-ga.repo \
     cat <<- EOF > /etc/yum.repos.d/sentinel-registry-ga.repo
-    [yum-ga]
-    name=yum-ga
-    baseurl=https://${S1_REPOSITORY_URL}/yum-ga
-    enabled=1
-    repo_gpgcheck=0
-    gpgcheck=0
-    username=${S1_REPOSITORY_USERNAME}
-    password=${S1_REPOSITORY_PASSWORD}"
+[yum-ga]
+name=yum-ga
+baseurl=https://${S1_REPOSITORY_URL}/yum-ga
+enabled=1
+repo_gpgcheck=0
+gpgcheck=0
+username=${S1_REPOSITORY_USERNAME}
+password=${S1_REPOSITORY_PASSWORD}"
 EOF
 
     # remove /etc/yum.repos.d/sentinel-registry-ea.repo if it exists already
