@@ -187,7 +187,7 @@ enabled=1
 repo_gpgcheck=0
 gpgcheck=0
 username=${S1_REPOSITORY_USERNAME}
-password=${S1_REPOSITORY_PASSWORD}"
+password=${S1_REPOSITORY_PASSWORD}
 EOF
 
     # remove /etc/yum.repos.d/sentinel-registry-ea.repo if it exists already
