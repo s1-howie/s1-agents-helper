@@ -127,6 +127,7 @@ function detect_pkg_mgr_info () {
         PACKAGE_MANAGER='zypper'
       #  AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
       install_using_zypper
+      # Login failed. (https://rpm.sentinelone.net/yum-ea/repodata/repomd.xml): The requested URL returned error: 401
     elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
       #  FILE_EXTENSION='.rpm'
         PACKAGE_MANAGER='dnf'
@@ -203,25 +204,22 @@ function install_using_zypper () {
     cat <<- EOF > /etc/zypp/repos.d/sentinel-registry-ga.repo
 [yum-ga]
 name=yum-ga
-baseurl=https://${S1_REPOSITORY_URL}/yum-ga
+baseurl=https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL}/yum-ga
 enabled=1
 repo_gpgcheck=0
 gpgcheck=0
-username=${S1_REPOSITORY_USERNAME}
-password=${S1_REPOSITORY_PASSWORD}
 EOF
 
     cat <<- EOF > /etc/zypp/repos.d/sentinel-registry-ea.repo
 [yum-ea]
 name=yum-ea
-baseurl=https://${S1_REPOSITORY_URL}/yum-ea
+baseurl=https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL}/yum-ea
 enabled=1
 repo_gpgcheck=0
 gpgcheck=0
-username=${S1_REPOSITORY_USERNAME}
-password=${S1_REPOSITORY_PASSWORD}
 EOF
-
+    zypper refresh
+    # being prompted for username and password - not taking
     zypper install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
 }
 
