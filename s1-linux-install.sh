@@ -26,15 +26,39 @@ Green='\033[0;32m'        # Green
 Yellow='\033[0;33m'       # Yellow
 
 # Check if the minimum number of arguments have been passed
-if [ $# -lt 4 ]; then
-    printf "\n${Red}ERROR:  Expecting at least 4 arguments to be passed. \n${Color_Off}"
-    printf "Example usage: \n"
-    printf "ie:${Green} sudo $0 \$S1_REPOSITORY_USERNAME \$S1_REPOSITORY_PASSWORD \$S1_SITE_TOKEN 23.3.2.12  \n${Color_Off}"
-    printf "\nFor instructions on obtaining a ${Purple}Site Token${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
-    printf "    ${Blue}https://community.sentinelone.com/s/article/000004904 ${Color_Off} \n\n"
-    printf "\nFor instructions on obtaining ${Purple}Repository Credentials${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
-    printf "    ${Blue}https://community.sentinelone.com/s/article/000008771 ${Color_Off} \n\n"
-    exit 1
+# if [ $# -lt 4 ]; then
+#     printf "\n${Red}ERROR:  Expecting at least 4 arguments to be passed. \n${Color_Off}"
+#     printf "Example usage: \n"
+#     printf "ie:${Green} sudo $0 \$S1_REPOSITORY_USERNAME \$S1_REPOSITORY_PASSWORD \$S1_SITE_TOKEN 23.3.2.12  \n${Color_Off}"
+#     printf "\nFor instructions on obtaining a ${Purple}Site Token${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
+#     printf "    ${Blue}https://community.sentinelone.com/s/article/000004904 ${Color_Off} \n\n"
+#     printf "\nFor instructions on obtaining ${Purple}Repository Credentials${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
+#     printf "    ${Blue}https://community.sentinelone.com/s/article/000008771 ${Color_Off} \n\n"
+#     exit 1
+# fi
+
+# Check for s1.config file.  If it exists, source it.
+if [ -f s1.config ]; then
+    echo "Sourcing s1.config file..."
+    source s1.config
+else
+    echo "no s1.config file in $(pwd)"
+fi 
+
+if ! [[ -v S1_SITE_TOKEN ]];then
+    read -p "Please enter your SentinelOne Site Token: " S1_SITE_TOKEN
+fi
+
+if ! [[ -v S1_REPOSITORY_USERNAME ]];then
+    read -p "Please enter your SentinelOne Repo Username: " S1_REPOSITORY_USERNAME
+fi
+
+if ! [[ -v S1_REPOSITORY_PASSWORD ]];then
+    read -p "Please enter your SentinelOne Repo Password: " S1_REPOSITORY_PASSWORD
+fi
+
+if ! [[ -v S1_AGENT_VERSION ]];then
+    read -p "Please enter the SentinelOne Agent Version to install: " S1_AGENT_VERSION
 fi
 
 # Check if running as root
@@ -159,7 +183,7 @@ gpgcheck=0
 username=${S1_REPOSITORY_USERNAME}
 password=${S1_REPOSITORY_PASSWORD}
 EOF
-    if (which dnf); then
+    if (which dnf &> /dev/null); then
             dnf makecache
             dnf install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
         else
@@ -210,40 +234,10 @@ else
 fi
 
 
-# printf "\n${Green}SUCCESS:  Finished installing SentinelOne Agent. ${Color_Off}\n\n"
+
 
 # Set the Site Token
 sentinelctl management token set $S1_SITE_TOKEN
 
 # Start the Agent
 sentinelctl control start
-
-
-# TODO:
-# - handle incorrect agent version number (ie: doesn't exist)
-# - use heredoc syntax for legibility
-# - THINK:  Is this the most universally acceptable way to install???
-# - How will the deployment react when credentials are rotated?
-# - colorize output
-# - log to a file
-        # - executed from: $(pwd)
-        # - executed by:   $USER
-        # - timestamp
-        # - function called
-        # - return success/fail
-        # - 
-        # - 
-        # - 
-# - test for strange + missing input
-# - JUST GA (no EA)
-# - upgrades/downgrades
-# - SUSE / zypper - authentication
-# - hostnames on fedora 38 and rhel9 are ginormous fedora38.us-central1-a.c.s1-demo-397817.internal - not really OUR decision.
-# - checks if sentinelctl is installed before using it (errors)
-# - dnf
-# - Warning: apt-key is deprecated. Manage keyring files in trusted.gpg.d instead (see apt-key(8)).
-# - 
-# - script wouldn't execute (permissions) on Google CooS
-# - handle error when we hit the rate limit.  Can we see how close we are to the limit?  This could be a bigger issue if we're sharing keys for POCs.
-
-
