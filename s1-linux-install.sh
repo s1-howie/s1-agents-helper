@@ -95,7 +95,7 @@ function find_agent_info_by_architecture () {
 
 # Detect the correct Package Manager to use given the Operating System's ID
 function detect_pkg_mgr_info () {
-    if (cat /etc/os-release | grep -E "ID=\"(ubuntu|debian)\""); then
+    if (cat /etc/os-release | grep -E "ID=(ubuntu|debian)"); then
     #if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
         install_using_apt
     elif (cat /etc/os-release | grep -E "ID=\"(rhel|amzn|centos|ol|scientific|rocky|almalinux)\""); then
