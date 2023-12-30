@@ -85,25 +85,10 @@ function check_args () {
 function find_agent_info_by_architecture () {
     OS_ARCH=$(uname -p)
     if [[ $OS_ARCH == "aarch64" ]]; then
-        # for i in {0..20}; do
-        #     FN=$(cat response.txt | jq -r ".data[$i].fileName")
-        #     if [[ $FN == *$OS_ARCH* ]]; then
-        #         AGENT_FILE_NAME=$(cat response.txt | jq -r ".data[$i].fileName")
-        #         AGENT_DOWNLOAD_LINK=$(cat response.txt | jq -r ".data[$i].link")
-        #         break
-        #     fi
-        # done
-        echo "aarch64"
+        echo $OS_ARCH
     elif [[ $OS_ARCH == "x86_64" || $OS_ARCH == "unknown" ]]; then
-        # for i in {0..20}; do
-        #     FN=$(cat response.txt | jq -r ".data[$i].fileName")
-        #     if [[ $FN != *"aarch"* ]]; then
-        #         AGENT_FILE_NAME=$(cat response.txt | jq -r ".data[$i].fileName")
-        #         AGENT_DOWNLOAD_LINK=$(cat response.txt | jq -r ".data[$i].link")
-        #         break
-        #     fi
-        # done
-        echo "x86_64"
+        OS_ARCH="x86_64" # for cases when uname -p returns "unknown"
+        echo $OS_ARCH
     else
         printf "\n${Red}ERROR:  OS_ARCH is neither 'aarch64' nor 'x86_64':  $OS_ARCH ${Color_Off}\n"
     fi
@@ -197,6 +182,7 @@ EOF
 
 
 function install_using_zypper () {
+    ############### can't get zypper to read the password - wont store it with zypper addrepo either ###########
     echo "installing with zypper..."
     S1_REPOSITORY_URL="rpm.sentinelone.net"
     rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
@@ -261,5 +247,15 @@ sentinelctl control start
 # TODO:
 # - handle incorrect agent version number (ie: doesn't exist)
 # - use heredoc syntax for legibility
+# - colorize output
+# - log to a file
+# - test for strange + missing input
+# - JUST GA (no EA)
+# - upgrades/downgrades
+# - SUSE / zypper - authentication
+# - uname -p returns "unknown" on fedora 38
+# - 
+# - 
+# - 
 # - 
 # - 
