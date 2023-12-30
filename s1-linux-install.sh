@@ -245,6 +245,6 @@ sentinelctl control start
 # - hostnames on fedora 38 and rhel9 are ginormous fedora38.us-central1-a.c.s1-demo-397817.internal - not really OUR decision.
 # - checks if sentinelctl is installed before using it (errors)
 # - dnf
-# - 
+# - Warning: apt-key is deprecated. Manage keyring files in trusted.gpg.d instead (see apt-key(8)).
 # - 
 # - script wouldn't execute (permissions) on Google CooS
