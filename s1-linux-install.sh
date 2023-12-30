@@ -98,25 +98,17 @@ function find_agent_info_by_architecture () {
 # Detect if the Linux Platform uses RPM/DEB packages and the correct Package Manager to use
 function detect_pkg_mgr_info () {
     if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
-        #FILE_EXTENSION='.deb'
         PACKAGE_MANAGER='apt'
-       # AGENT_INSTALL_SYNTAX='dpkg -i'
        install_using_apt
     elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
-      #  FILE_EXTENSION='.rpm'
         PACKAGE_MANAGER='yum'
-      #  AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
       install_using_yum
     elif (cat /etc/*release |grep 'ID="sles"'); then
-      #  FILE_EXTENSION='.rpm'
         PACKAGE_MANAGER='zypper'
-      #  AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
       install_using_zypper
       # Login failed. (https://rpm.sentinelone.net/yum-ea/repodata/repomd.xml): The requested URL returned error: 401
     elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
-      #  FILE_EXTENSION='.rpm'
         PACKAGE_MANAGER='dnf'
-      #  AGENT_INSTALL_SYNTAX='rpm -i --nodigest'
       install_using_yum
     else
         printf "\n${Red}ERROR:  Unknown Release ID: $1 ${Color_Off}\n"
@@ -130,8 +122,8 @@ function detect_pkg_mgr_info () {
 function install_using_apt () {
     echo "installing with apt..."
     S1_REPOSITORY_URL="deb.sentinelone.net"
-    apt update
-    apt install -y curl gnupg apt-transport-https
+    # apt update
+    # apt install -y curl gnupg apt-transport-https
     # add public signature verification key for the repository to ensure the integrity and authenticity of packages
     curl -s https://us-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add - && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
     # remove any pre-existing s1-registry.list
@@ -225,17 +217,6 @@ detect_pkg_mgr_info
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 # Set the Site Token
 sentinelctl management token set $S1_SITE_TOKEN
 
@@ -249,13 +230,21 @@ sentinelctl control start
 # - use heredoc syntax for legibility
 # - colorize output
 # - log to a file
+        # - executed from: $(pwd)
+        # - executed by:   $USER
+        # - timestamp
+        # - function called
+        # - return success/fail
+        # - 
+        # - 
+        # - 
 # - test for strange + missing input
 # - JUST GA (no EA)
 # - upgrades/downgrades
 # - SUSE / zypper - authentication
-# - uname -p returns "unknown" on fedora 38
+# - hostnames on fedora 38 and rhel9 are ginormous fedora38.us-central1-a.c.s1-demo-397817.internal - not really OUR decision.
+# - checks if sentinelctl is installed before using it (errors)
+# - dnf
 # - 
 # - 
-# - 
-# - 
-# - 
+# - script wouldn't execute (permissions) on Google CooS
