@@ -137,7 +137,7 @@ function install_using_apt () {
 
 
 function install_using_yum_or_dnf () {
-    echo "installing with yum..."
+    echo "installing with yum or dnf..."
     S1_REPOSITORY_URL="rpm.sentinelone.net"
     #yum -y update
     rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
