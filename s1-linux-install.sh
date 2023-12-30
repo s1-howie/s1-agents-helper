@@ -98,18 +98,16 @@ function find_agent_info_by_architecture () {
 # Detect if the Linux Platform uses RPM/DEB packages and the correct Package Manager to use
 function detect_pkg_mgr_info () {
     if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
-        PACKAGE_MANAGER='apt'
-       install_using_apt
+        #PACKAGE_MANAGER='apt'
+        install_using_apt
     elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
-        PACKAGE_MANAGER='yum'
-      install_using_yum
+        install_using_yum_or_dnf
     elif (cat /etc/*release |grep 'ID="sles"'); then
-        PACKAGE_MANAGER='zypper'
-      install_using_zypper
-      # Login failed. (https://rpm.sentinelone.net/yum-ea/repodata/repomd.xml): The requested URL returned error: 401
+        #PACKAGE_MANAGER='zypper'
+        install_using_zypper
+        # Login failed. (https://rpm.sentinelone.net/yum-ea/repodata/repomd.xml): The requested URL returned error: 401
     elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
-        PACKAGE_MANAGER='dnf'
-      install_using_yum
+        install_using_yum_or_dnf
     else
         printf "\n${Red}ERROR:  Unknown Release ID: $1 ${Color_Off}\n"
         cat /etc/*release
@@ -138,7 +136,7 @@ function install_using_apt () {
 }
 
 
-function install_using_yum () {
+function install_using_yum_or_dnf () {
     echo "installing with yum..."
     S1_REPOSITORY_URL="rpm.sentinelone.net"
     #yum -y update
@@ -165,9 +163,14 @@ gpgcheck=0
 username=${S1_REPOSITORY_USERNAME}
 password=${S1_REPOSITORY_PASSWORD}
 EOF
-
-    yum makecache
-    yum install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
+    if (which dnf); then
+            dnf makecache
+            dnf install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
+        else
+            yum makecache
+            yum install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
+        fi
+    
 }
 
 # dnf????
@@ -205,7 +208,6 @@ EOF
 check_root
 check_args
 
-# need to test on ARM!!!
 find_agent_info_by_architecture
 
 
@@ -228,6 +230,8 @@ sentinelctl control start
 # TODO:
 # - handle incorrect agent version number (ie: doesn't exist)
 # - use heredoc syntax for legibility
+# - THINK:  Is this the most universally acceptable way to install???
+# - How will the deployment react when credentials are rotated?
 # - colorize output
 # - log to a file
         # - executed from: $(pwd)
