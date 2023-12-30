@@ -45,19 +45,19 @@ else
     echo "no s1.config file in $(pwd)"
 fi 
 
-if ! [[ -v S1_SITE_TOKEN ]];then
+if [ -z $S1_SITE_TOKEN ];then
     read -p "Please enter your SentinelOne Site Token: " S1_SITE_TOKEN
 fi
 
-if ! [[ -v S1_REPOSITORY_USERNAME ]];then
+if [ -z $S1_REPOSITORY_USERNAME ];then
     read -p "Please enter your SentinelOne Repo Username: " S1_REPOSITORY_USERNAME
 fi
 
-if ! [[ -v S1_REPOSITORY_PASSWORD ]];then
+if [ -z $S1_REPOSITORY_PASSWORD ];then
     read -p "Please enter your SentinelOne Repo Password: " S1_REPOSITORY_PASSWORD
 fi
 
-if ! [[ -v S1_AGENT_VERSION ]];then
+if [ -z $S1_AGENT_VERSION ];then
     read -p "Please enter the SentinelOne Agent Version to install: " S1_AGENT_VERSION
 fi
 
