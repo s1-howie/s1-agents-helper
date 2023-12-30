@@ -95,7 +95,8 @@ function find_agent_info_by_architecture () {
 
 # Detect the correct Package Manager to use given the Operating System's ID
 function detect_pkg_mgr_info () {
-    if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
+    if (cat /etc/os-release | grep -E "ID=\"(ubuntu|debian)\""); then
+    #if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
         install_using_apt
     elif (cat /etc/os-release | grep -E "ID=\"(rhel|amzn|centos|ol|scientific|rocky|almalinux)\""); then
     #elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
@@ -164,8 +165,7 @@ EOF
         else
             yum makecache
             yum install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
-        fi
-    
+    fi
 }
 
 
@@ -202,6 +202,12 @@ check_root
 check_args
 find_agent_info_by_architecture
 detect_pkg_mgr_info
+if [ $? -eq 0 ]; then
+    printf "\n${Green}SUCCESS:  Finished installing SentinelOne Agent. ${Color_Off}\n\n"
+else
+    printf "\n${Red}ERROR:  Failed to install SentinelOne Agent. ${Color_Off}\n\n"
+fi
+
 
 # printf "\n${Green}SUCCESS:  Finished installing SentinelOne Agent. ${Color_Off}\n\n"
 
@@ -237,3 +243,6 @@ sentinelctl control start
 # - Warning: apt-key is deprecated. Manage keyring files in trusted.gpg.d instead (see apt-key(8)).
 # - 
 # - script wouldn't execute (permissions) on Google CooS
+# - handle error when we hit the rate limit.  Can we see how close we are to the limit?  This could be a bigger issue if we're sharing keys for POCs.
+
+
