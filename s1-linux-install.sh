@@ -111,10 +111,10 @@ function check_args () {
 function find_agent_info_by_architecture () {
     OS_ARCH=$(uname -p)
     if [[ $OS_ARCH == "aarch64" ]]; then
-        echo $OS_ARCH
+        printf "\n${Yellow}CPU Architecture:  $OS_ARCH ${Color_Off} \n\n" 
     elif [[ $OS_ARCH == "x86_64" || $OS_ARCH == "unknown" ]]; then
         OS_ARCH="x86_64" # for cases when uname -p returns "unknown"
-        echo $OS_ARCH
+        printf "\n${Yellow}CPU Architecture:  $OS_ARCH ${Color_Off} \n\n" 
     else
         printf "\n${Red}ERROR:  OS_ARCH is neither 'aarch64' nor 'x86_64':  $OS_ARCH ${Color_Off}\n"
     fi
@@ -123,16 +123,19 @@ function find_agent_info_by_architecture () {
 
 # Detect the correct Package Manager to use given the Operating System's ID
 function detect_pkg_mgr_info () {
-    if (cat /etc/os-release | grep -E "ID=(ubuntu|debian)"); then
+    if (cat /etc/os-release | grep -E "ID=(ubuntu|debian)" &> /dev/null ); then
     #if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
+        printf "\n${Yellow}Detected Debian-based OS...${Color_Off} \n\n" 
         install_using_apt
-    elif (cat /etc/os-release | grep -E "ID=\"(rhel|amzn|centos|ol|scientific|rocky|almalinux)\""); then
+    elif (cat /etc/os-release | grep -E "ID=\"(rhel|amzn|centos|ol|scientific|rocky|almalinux)\"" &> /dev/null ); then
     #elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
+        printf "\n${Yellow}Detected Red Hat-based OS...${Color_Off} \n\n" 
         install_using_yum_or_dnf
     # elif (cat /etc/*release |grep 'ID="sles"'); then
     #     install_using_zypper
         # Login failed. (https://rpm.sentinelone.net/yum-ea/repodata/repomd.xml): The requested URL returned error: 401
-    elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
+    elif (cat /etc/os-release |grep 'ID="fedora"' || cat /etc/os-release |grep 'ID=fedora' &> /dev/null ); then
+        printf "\n${Yellow}Detected Red Hat-based OS...${Color_Off} \n\n" 
         install_using_yum_or_dnf
     else
         printf "\n${Red}ERROR:  Unknown Release ID: $1 ${Color_Off}\n"
@@ -144,7 +147,7 @@ function detect_pkg_mgr_info () {
 
 
 function install_using_apt () {
-    echo "installing with apt..."
+    printf "\n${Yellow}Installing with apt...${Color_Off} \n\n" 
     S1_REPOSITORY_URL="deb.sentinelone.net"
     # add public signature verification key for the repository to ensure the integrity and authenticity of packages
     curl -s https://us-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add - && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
@@ -161,7 +164,7 @@ function install_using_apt () {
 
 
 function install_using_yum_or_dnf () {
-    echo "installing with yum or dnf..."
+    printf "\n${Yellow}installing with yum or dnf...${Color_Off} \n\n" 
     S1_REPOSITORY_URL="rpm.sentinelone.net"
     #yum -y update
     rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
