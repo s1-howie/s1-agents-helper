@@ -46,18 +46,22 @@ else
 fi 
 
 if [ -z $S1_SITE_TOKEN ];then
+    echo ""
     read -p "Please enter your SentinelOne Site Token: " S1_SITE_TOKEN
 fi
 
 if [ -z $S1_REPOSITORY_USERNAME ];then
+    echo ""
     read -p "Please enter your SentinelOne Repo Username: " S1_REPOSITORY_USERNAME
 fi
 
 if [ -z $S1_REPOSITORY_PASSWORD ];then
+    echo ""
     read -p "Please enter your SentinelOne Repo Password: " S1_REPOSITORY_PASSWORD
 fi
 
 if [ -z $S1_AGENT_VERSION ];then
+    echo ""
     read -p "Please enter the SentinelOne Agent Version to install: " S1_AGENT_VERSION
 fi
 
