@@ -2,7 +2,7 @@
 ##############################################################################################################
 # Description:  Bash script to aid with automating S1 Agent install on Linux
 # 
-# Usage:    sudo ./s1-agent-helper.sh S1_CONSOLE_PREFIX API_KEY SITE_TOKEN VERSION_STATUS
+# Usage:  sudo ./s1-linux-install.sh S1_REPOSITORY_USERNAME S1_REPOSITORY_PASSWORD S1_SITE_TOKEN S1_AGENT_VERSION
 # 
 # Version:  1.0
 ##############################################################################################################
@@ -18,8 +18,6 @@ S1_AGENT_VERSION=$4
 # echo "pass: $S1_REPOSITORY_PASSWORD"
 # echo "token: $S1_SITE_TOKEN"
 # echo "version: $S1_AGENT_VERSION"
-
-
 
 Color_Off='\033[0m'       # Text Resets
 # Regular Colors
@@ -47,7 +45,7 @@ function check_root () {
     fi
 }
 
-
+# Sanity check arguments passed to the script
 function check_args () {
         # Check if the value of S1_SITE_TOKEN is in the right format
     if ! echo $S1_SITE_TOKEN | base64 -d | grep sentinelone.net &> /dev/null ; then
@@ -81,7 +79,7 @@ function check_args () {
 
 }
 
-
+# Determine the CPU architecture
 function find_agent_info_by_architecture () {
     OS_ARCH=$(uname -p)
     if [[ $OS_ARCH == "aarch64" ]]; then
@@ -95,16 +93,14 @@ function find_agent_info_by_architecture () {
 }
 
 
-# Detect if the Linux Platform uses RPM/DEB packages and the correct Package Manager to use
+# Detect the correct Package Manager to use given the Operating System's ID
 function detect_pkg_mgr_info () {
     if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
-        #PACKAGE_MANAGER='apt'
         install_using_apt
     elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
         install_using_yum_or_dnf
-    elif (cat /etc/*release |grep 'ID="sles"'); then
-        #PACKAGE_MANAGER='zypper'
-        install_using_zypper
+    # elif (cat /etc/*release |grep 'ID="sles"'); then
+    #     install_using_zypper
         # Login failed. (https://rpm.sentinelone.net/yum-ea/repodata/repomd.xml): The requested URL returned error: 401
     elif (cat /etc/*release |grep 'ID="fedora"' || cat /etc/*release |grep 'ID=fedora'); then
         install_using_yum_or_dnf
@@ -120,8 +116,6 @@ function detect_pkg_mgr_info () {
 function install_using_apt () {
     echo "installing with apt..."
     S1_REPOSITORY_URL="deb.sentinelone.net"
-    # apt update
-    # apt install -y curl gnupg apt-transport-https
     # add public signature verification key for the repository to ensure the integrity and authenticity of packages
     curl -s https://us-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add - && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
     # remove any pre-existing s1-registry.list
@@ -173,8 +167,6 @@ EOF
     
 }
 
-# dnf????
-
 
 function install_using_zypper () {
     ############### can't get zypper to read the password - wont store it with zypper addrepo either ###########
@@ -204,27 +196,19 @@ EOF
     zypper install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
 }
 
-
+# Run functions
 check_root
 check_args
-
 find_agent_info_by_architecture
-
-
 detect_pkg_mgr_info
 
-
 # printf "\n${Green}SUCCESS:  Finished installing SentinelOne Agent. ${Color_Off}\n\n"
-
-
-
 
 # Set the Site Token
 sentinelctl management token set $S1_SITE_TOKEN
 
 # Start the Agent
 sentinelctl control start
-
 
 
 # TODO:
