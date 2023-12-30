@@ -206,6 +206,7 @@ if [ $? -eq 0 ]; then
     printf "\n${Green}SUCCESS:  Finished installing SentinelOne Agent. ${Color_Off}\n\n"
 else
     printf "\n${Red}ERROR:  Failed to install SentinelOne Agent. ${Color_Off}\n\n"
+    exit 1
 fi
 
 
