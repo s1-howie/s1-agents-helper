@@ -214,7 +214,8 @@ username=${S1_REPOSITORY_USERNAME}
 password=${S1_REPOSITORY_PASSWORD}
 EOF
     # add the EA repository to the list of sources (if the customer wants to use EA packages)
-    cat <<- EOF > /etc/yum.repos.d/sentinelone-registry-ea.repo
+    if ( echo $INCLUDE_EARLY_ACCESS_REPO | grep -E "([Tt]rue|[Yy]es|[Yy])" &> /dev/null ); then
+        cat <<- EOF > /etc/yum.repos.d/sentinelone-registry-ea.repo
 [yum-ea]
 name=yum-ea
 baseurl=https://${S1_REPOSITORY_URL}/yum-ea
@@ -224,6 +225,8 @@ gpgcheck=0
 username=${S1_REPOSITORY_USERNAME}
 password=${S1_REPOSITORY_PASSWORD}
 EOF
+    fi
+    # Check if dnf is available, if not.. use yum.
     if (which dnf &> /dev/null); then
             dnf makecache
             dnf install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
