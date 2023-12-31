@@ -151,13 +151,13 @@ function install_using_apt () {
     S1_REPOSITORY_URL="deb.sentinelone.net"
     # add public signature verification key for the repository to ensure the integrity and authenticity of packages
     curl -s https://us-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add - && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-    # remove any pre-existing s1-registry.list
-    rm -f /etc/apt/sources.list.d/s1-registry.list
+    # remove any pre-existing sentinelone-registry.list
+    rm -f /etc/apt/sources.list.d/sentinelone-registry.list
     # add the GA repository to the list of sources
-    echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main" | tee -a /etc/apt/sources.list.d/s1-registry.list
+    echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main" | tee -a /etc/apt/sources.list.d/sentinelone-registry.list
     # add the EA repository to the list of sources (if the customer wants to use EA packages)
-    echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ea main" | tee -a /etc/apt/sources.list.d/s1-registry.list
-    cat /etc/apt/sources.list.d/s1-registry.list
+    echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ea main" | tee -a /etc/apt/sources.list.d/sentinelone-registry.list
+    cat /etc/apt/sources.list.d/sentinelone-registry.list
     apt update
     apt install -y sentinelagent=${S1_AGENT_VERSION}
 }
@@ -168,7 +168,7 @@ function install_using_yum_or_dnf () {
     S1_REPOSITORY_URL="rpm.sentinelone.net"
     rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 
-    cat <<- EOF > /etc/yum.repos.d/sentinel-registry-ga.repo
+    cat <<- EOF > /etc/yum.repos.d/sentinelone-registry-ga.repo
 [yum-ga]
 name=yum-ga
 baseurl=https://${S1_REPOSITORY_URL}/yum-ga
@@ -179,7 +179,7 @@ username=${S1_REPOSITORY_USERNAME}
 password=${S1_REPOSITORY_PASSWORD}
 EOF
 
-    cat <<- EOF > /etc/yum.repos.d/sentinel-registry-ea.repo
+    cat <<- EOF > /etc/yum.repos.d/sentinelone-registry-ea.repo
 [yum-ea]
 name=yum-ea
 baseurl=https://${S1_REPOSITORY_URL}/yum-ea
@@ -205,7 +205,7 @@ function install_using_zypper () {
     S1_REPOSITORY_URL="rpm.sentinelone.net"
     rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 
-    cat <<- EOF > /etc/zypp/repos.d/sentinel-registry-ga.repo
+    cat <<- EOF > /etc/zypp/repos.d/sentinelone-registry-ga.repo
 [yum-ga]
 name=yum-ga
 baseurl=https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL}/yum-ga
@@ -214,7 +214,7 @@ repo_gpgcheck=0
 gpgcheck=0
 EOF
 
-    cat <<- EOF > /etc/zypp/repos.d/sentinel-registry-ea.repo
+    cat <<- EOF > /etc/zypp/repos.d/sentinelone-registry-ea.repo
 [yum-ea]
 name=yum-ea
 baseurl=https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL}/yum-ea
