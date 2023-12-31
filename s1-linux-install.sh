@@ -49,7 +49,7 @@ White='\033[0;37m'        # White
 # S1_SITE_TOKEN=""
 # S1_AGENT_VERSION="23.4.1.4"
 
-INCLUDE_EARLY_ACCESS_REPO="false"
+INCLUDE_EARLY_ACCESS_REPO="true"
 
 # Check for s1.config file.  If it exists, source it.
 if [ -f s1.config ]; then
