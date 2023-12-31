@@ -49,6 +49,8 @@ White='\033[0;37m'        # White
 # S1_SITE_TOKEN=""
 # S1_AGENT_VERSION="23.4.1.4"
 
+INCLUDE_EARLY_ACCESS_REPO="false"
+
 # Check for s1.config file.  If it exists, source it.
 if [ -f s1.config ]; then
     printf "\n${Yellow}INFO:  Found 's1.config' file in $(pwd).${Color_Off}\n\n"
@@ -186,9 +188,10 @@ function install_using_apt () {
     rm -f /etc/apt/sources.list.d/sentinelone-registry.list
     # add the GA repository to the list of sources
     echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main" | tee -a /etc/apt/sources.list.d/sentinelone-registry.list
-    # add the EA repository to the list of sources (if the customer wants to use EA packages)
-    echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ea main" | tee -a /etc/apt/sources.list.d/sentinelone-registry.list
-    cat /etc/apt/sources.list.d/sentinelone-registry.list
+    if ( echo $INCLUDE_EARLY_ACCESS_REPO | grep E "([Tt]rue|[Yy]es|[Yy])" &> /dev/null ); then
+        # add the EA repository to the list of sources (if the customer wants to use EA packages)
+        echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ea main" | tee -a /etc/apt/sources.list.d/sentinelone-registry.list
+    fi
     apt update
     apt install -y sentinelagent=${S1_AGENT_VERSION}
 }
