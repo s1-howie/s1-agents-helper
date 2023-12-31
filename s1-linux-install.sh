@@ -48,8 +48,8 @@ White='\033[0;37m'        # White
 # S1_REPOSITORY_PASSWORD=""
 # S1_SITE_TOKEN=""
 # S1_AGENT_VERSION="23.4.1.4"
+# INCLUDE_EARLY_ACCESS_REPO="true"
 
-INCLUDE_EARLY_ACCESS_REPO="true"
 
 # Check for s1.config file.  If it exists, source it.
 if [ -f s1.config ]; then
@@ -60,12 +60,13 @@ else
 fi 
 
 # Check if all 4 arguments were passed to the script
-if [ $# -eq 4 ]; then
-    printf "\n${Yellow}INFO:  Found 4 arguments that were passed to the script. \n\n${Color_Off}"
+if [ $# -eq 4 ] || [ $# -eq 5 ]; then
+    printf "\n${Yellow}INFO:  Found $# arguments that were passed to the script. \n\n${Color_Off}"
     S1_REPOSITORY_USERNAME=$1
     S1_REPOSITORY_PASSWORD=$2
     S1_SITE_TOKEN=$3
-    S1_AGENT_VERSION=$4  
+    S1_AGENT_VERSION=$4
+    INCLUDE_EARLY_ACCESS_REPO="${5:-true}"
 fi
 
 # Check if arguments have been passed at all.
