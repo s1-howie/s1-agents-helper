@@ -96,6 +96,11 @@ if [ -z $S1_AGENT_VERSION ];then
     read -p "Please enter the SentinelOne Agent Version to install: " S1_AGENT_VERSION
 fi
 
+if [ -z $INCLUDE_EARLY_ACCESS_REPO ];then
+    echo ""
+    read -p "Would you like to include SentinelOne's Early Access Repo (Yes/No)?: " INCLUDE_EARLY_ACCESS_REPO
+fi
+
 ################################################################################
 # Sanity Check Functions for execution enviornment and variable inputs
 ################################################################################
