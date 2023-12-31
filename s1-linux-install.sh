@@ -54,6 +54,17 @@ else
     printf "\n${Yellow}INFO:  No 's1.config' file found in $(pwd).${Color_Off}\n\n"
 fi 
 
+# Check if arguments have been passed as well as the correct number of arguments (4).
+if [ $# -eq 0 ]; then
+    printf "\n${Yellow}INFO:  No input arguments were passed to the script. \n${Color_Off}"
+fi
+
+if [ $# -eq 4 ]; then
+    printf "\n${Yellow}INFO:  Found 4 arguments that were passed to the script. \n${Color_Off}"
+fi
+
+# If the needed variables have not been sourced from the s1.config file, passed via cmdline 
+# arguments or read from exported variables, we'll prompt the user for them.
 if [ -z $S1_SITE_TOKEN ];then
     echo ""
     read -p "Please enter your SentinelOne Site Token: " S1_SITE_TOKEN
