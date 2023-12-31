@@ -8,10 +8,7 @@
 ##############################################################################################################
 
 
-S1_REPOSITORY_USERNAME=$1
-S1_REPOSITORY_PASSWORD=$2
-S1_SITE_TOKEN=$3
-S1_AGENT_VERSION=$4  
+
 
 # Debugging ####################################################
 # echo "user: $S1_REPOSITORY_USERNAME"
@@ -54,16 +51,21 @@ else
     printf "\n${Yellow}INFO:  No 's1.config' file found in $(pwd).${Color_Off}\n\n"
 fi 
 
-# Check if arguments have been passed as well as the correct number of arguments (4).
+# Check if all 4 arguments were passed to the script
+if [ $# -eq 4 ]; then
+    printf "\n${Yellow}INFO:  Found 4 arguments that were passed to the script. \n\n${Color_Off}"
+    S1_REPOSITORY_USERNAME=$1
+    S1_REPOSITORY_PASSWORD=$2
+    S1_SITE_TOKEN=$3
+    S1_AGENT_VERSION=$4  
+fi
+
+# Check if arguments have been passed at all.
 if [ $# -eq 0 ]; then
     printf "\n${Yellow}INFO:  No input arguments were passed to the script. \n\n${Color_Off}"
 fi
 
-if [ $# -eq 4 ]; then
-    printf "\n${Yellow}INFO:  Found 4 arguments that were passed to the script. \n\n${Color_Off}"
-fi
-
-# If the needed variables have not been sourced from the s1.config file, passed via cmdline 
+# If the 4 needed variables have not been sourced from the s1.config file, passed via cmdline 
 # arguments or read from exported variables, we'll prompt the user for them.
 if [ -z $S1_SITE_TOKEN ];then
     echo ""
