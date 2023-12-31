@@ -43,6 +43,12 @@ White='\033[0;37m'        # White
 # Gather Inputs
 ################################################################################
 
+# Example format for 's1.config' file
+# S1_REPOSITORY_USERNAME=""
+# S1_REPOSITORY_PASSWORD=""
+# S1_SITE_TOKEN=""
+# S1_AGENT_VERSION="23.4.1.4"
+
 # Check for s1.config file.  If it exists, source it.
 if [ -f s1.config ]; then
     printf "\n${Yellow}INFO:  Found 's1.config' file in $(pwd).${Color_Off}\n\n"
@@ -66,7 +72,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # If the 4 needed variables have not been sourced from the s1.config file, passed via cmdline 
-# arguments or read from exported variables, we'll prompt the user for them.
+#   arguments or read from exported variables of the parent shell, we'll prompt the user for them.
 if [ -z $S1_SITE_TOKEN ];then
     echo ""
     read -p "Please enter your SentinelOne Site Token: " S1_SITE_TOKEN
