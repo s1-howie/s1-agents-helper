@@ -188,7 +188,7 @@ function install_using_apt () {
     rm -f /etc/apt/sources.list.d/sentinelone-registry.list
     # add the GA repository to the list of sources
     echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main" | tee -a /etc/apt/sources.list.d/sentinelone-registry.list
-    if ( echo $INCLUDE_EARLY_ACCESS_REPO | grep E "([Tt]rue|[Yy]es|[Yy])" &> /dev/null ); then
+    if ( echo $INCLUDE_EARLY_ACCESS_REPO | grep -E "([Tt]rue|[Yy]es|[Yy])" &> /dev/null ); then
         # add the EA repository to the list of sources (if the customer wants to use EA packages)
         echo "deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ea main" | tee -a /etc/apt/sources.list.d/sentinelone-registry.list
     fi
