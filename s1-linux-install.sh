@@ -42,6 +42,10 @@ White='\033[0;37m'        # White
 #     exit 1
 # fi
 
+################################################################################
+# Gather Inputs
+################################################################################
+
 # Check for s1.config file.  If it exists, source it.
 if [ -f s1.config ]; then
     printf "\n${Yellow}INFO:  Found 's1.config' file in $(pwd).${Color_Off}\n\n"
@@ -69,6 +73,10 @@ if [ -z $S1_AGENT_VERSION ];then
     echo ""
     read -p "Please enter the SentinelOne Agent Version to install: " S1_AGENT_VERSION
 fi
+
+################################################################################
+# Sanity Check Functions for execution enviornment and variable inputs
+################################################################################
 
 # Check if running as root
 function check_root () {
@@ -126,19 +134,18 @@ function find_agent_info_by_architecture () {
 }
 
 
+################################################################################
+# Functions to detect the OS and install using the correct package manager
+################################################################################
+
 # Detect the correct Package Manager to use given the Operating System's ID
 function detect_pkg_mgr_info () {
     if (cat /etc/os-release | grep -E "ID=(ubuntu|debian)" &> /dev/null ); then
-    #if (cat /etc/*release |grep 'ID=ubuntu' || cat /etc/*release |grep 'ID=debian'); then
         printf "\n${Yellow}INFO:  Detected Debian-based OS...${Color_Off} \n\n" 
         install_using_apt
     elif (cat /etc/os-release | grep -E "ID=\"(rhel|amzn|centos|ol|scientific|rocky|almalinux)\"" &> /dev/null ); then
-    #elif (cat /etc/*release |grep 'ID="rhel"' || cat /etc/*release |grep 'ID="amzn"' || cat /etc/*release |grep 'ID="centos"' || cat /etc/*release |grep 'ID="ol"' || cat /etc/*release |grep 'ID="scientific"' || cat /etc/*release |grep 'ID="rocky"' || cat /etc/*release |grep 'ID="almalinux"'); then
         printf "\n${Yellow}INFO:  Detected Red Hat-based OS...${Color_Off} \n\n" 
         install_using_yum_or_dnf
-    # elif (cat /etc/*release |grep 'ID="sles"'); then
-    #     install_using_zypper
-        # Login failed. (https://rpm.sentinelone.net/yum-ea/repodata/repomd.xml): The requested URL returned error: 401
     elif (cat /etc/os-release |grep 'ID="fedora"' || cat /etc/os-release |grep 'ID=fedora' &> /dev/null ); then
         printf "\n${Yellow}INFO:  Detected Red Hat-based OS...${Color_Off} \n\n" 
         install_using_yum_or_dnf
@@ -171,8 +178,9 @@ function install_using_apt () {
 function install_using_yum_or_dnf () {
     printf "\n${Yellow}INFO:  Installing with yum or dnf...${Color_Off} \n\n" 
     S1_REPOSITORY_URL="rpm.sentinelone.net"
+    # add public signature verification key for the repository to ensure the integrity and authenticity of packages
     rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-
+    # add the GA repository to the list of sources
     cat <<- EOF > /etc/yum.repos.d/sentinelone-registry-ga.repo
 [yum-ga]
 name=yum-ga
@@ -183,7 +191,7 @@ gpgcheck=0
 username=${S1_REPOSITORY_USERNAME}
 password=${S1_REPOSITORY_PASSWORD}
 EOF
-
+    # add the EA repository to the list of sources (if the customer wants to use EA packages)
     cat <<- EOF > /etc/yum.repos.d/sentinelone-registry-ea.repo
 [yum-ea]
 name=yum-ea
@@ -203,34 +211,9 @@ EOF
     fi
 }
 
-
-function install_using_zypper () {
-    ############### can't get zypper to read the password - wont store it with zypper addrepo either ###########
-    echo "installing with zypper..."
-    S1_REPOSITORY_URL="rpm.sentinelone.net"
-    rpm --import https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-
-    cat <<- EOF > /etc/zypp/repos.d/sentinelone-registry-ga.repo
-[yum-ga]
-name=yum-ga
-baseurl=https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL}/yum-ga
-enabled=1
-repo_gpgcheck=0
-gpgcheck=0
-EOF
-
-    cat <<- EOF > /etc/zypp/repos.d/sentinelone-registry-ea.repo
-[yum-ea]
-name=yum-ea
-baseurl=https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL}/yum-ea
-enabled=1
-repo_gpgcheck=0
-gpgcheck=0
-EOF
-    zypper refresh
-    # being prompted for username and password - not taking
-    zypper install -y SentinelAgent-${S1_AGENT_VERSION}-1.${OS_ARCH}
-}
+################################################################################
+# Call functions to install the SentinelOne Agent
+################################################################################
 
 # Run functions
 check_root
@@ -245,7 +228,9 @@ else
 fi
 
 
-
+################################################################################
+# Configure and Start the SentinelOne Agent
+################################################################################
 
 # Set the Site Token
 sentinelctl management token set $S1_SITE_TOKEN
