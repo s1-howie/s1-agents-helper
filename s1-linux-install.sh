@@ -189,28 +189,27 @@ function install_using_apt () {
     printf "\n${Yellow}INFO:  Installing with apt...${Color_Off} \n\n" 
     S1_REPOSITORY_URL="deb.sentinelone.net"
     # add public signature verification key for the repository to ensure the integrity and authenticity of packages
-    #curl -s https://us-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add - && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-    wget -O- https://us-apt.pkg.dev/doc/repo-signing-key.gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/repo-signing-key.gpg
-    sudo chmod 644 /etc/apt/keyrings/repo-signing-key.gpg
-    wget -O- https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/apt-key.gpg
-    sudo chmod 644 /etc/apt/keyrings/apt-key.gpg
+    curl -s https://us-apt.pkg.dev/doc/repo-signing-key.gpg | apt-key add - && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    # wget -O- https://us-apt.pkg.dev/doc/repo-signing-key.gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/repo-signing-key.gpg
+    # sudo chmod 644 /etc/apt/keyrings/repo-signing-key.gpg
+    # wget -O- https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/apt-key.gpg
+    # sudo chmod 644 /etc/apt/keyrings/apt-key.gpg
     # remove any pre-existing sentinelone-registry
+    
     rm -f /etc/apt/sources.list.d/sentinelone-registry-ga.list
     rm -f /etc/apt/sources.list.d/sentinelone-registry-ea.list
     # add the GA repository to the list of sources
     cat <<- EOF > /etc/apt/sources.list.d/sentinelone-registry-ga.list
-deb [signed-by=/etc/apt/keyrings/repo-signing-key.gpg] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main
+deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main
 EOF
 
-# deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main
-
-# deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ea main
-
+# deb [signed-by=/etc/apt/keyrings/repo-signing-key.gpg] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main
+# deb [signed-by=/etc/apt/keyrings/repo-signing-key.gpg] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main
 
     if ( echo $INCLUDE_EARLY_ACCESS_REPO | grep -E "([Tt]rue|[Yy]es|[Yy])" &> /dev/null ); then
         # add the EA repository to the list of sources (if INCLUDE_EARLY_ACCESS_REPO is set to true)
         cat <<- EOF > /etc/apt/sources.list.d/sentinelone-registry-ea.list
-deb [signed-by=/etc/apt/keyrings/repo-signing-key.gpg] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ga main
+deb [trusted=yes] https://${S1_REPOSITORY_USERNAME}:${S1_REPOSITORY_PASSWORD}@${S1_REPOSITORY_URL} apt-ea main
 EOF
     fi
     apt update
