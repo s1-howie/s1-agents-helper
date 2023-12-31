@@ -44,10 +44,10 @@ White='\033[0;37m'        # White
 
 # Check for s1.config file.  If it exists, source it.
 if [ -f s1.config ]; then
-    printf "\n${Yellow}INFO:  Found 's1.config' file in $(pwd).${Color_Off}\n"
+    printf "\n${Yellow}INFO:  Found 's1.config' file in $(pwd).${Color_Off}\n\n"
     source s1.config
 else
-    printf "\n${Yellow}INFO:  No 's1.config' file found in $(pwd).${Color_Off}\n"
+    printf "\n${Yellow}INFO:  No 's1.config' file found in $(pwd).${Color_Off}\n\n"
 fi 
 
 if [ -z $S1_SITE_TOKEN ];then
@@ -116,10 +116,10 @@ function check_args () {
 function find_agent_info_by_architecture () {
     OS_ARCH=$(uname -p)
     if [[ $OS_ARCH == "aarch64" ]]; then
-        printf "\n${Yellow}INFO:  CPU Architecture is $OS_ARCH ${Color_Off} \n\n" 
+        printf "\n${Yellow}INFO:  CPU Architecture is $OS_ARCH... ${Color_Off} \n\n" 
     elif [[ $OS_ARCH == "x86_64" || $OS_ARCH == "unknown" ]]; then
         OS_ARCH="x86_64" # for cases when uname -p returns "unknown" (ie: Some versions of Fedora), we'll assume x86_64.
-        printf "\n${Yellow}INFO:  CPU Architecture is $OS_ARCH ${Color_Off} \n\n" 
+        printf "\n${Yellow}INFO:  CPU Architecture is $OS_ARCH... ${Color_Off} \n\n" 
     else
         printf "\n${Red}ERROR:  OS_ARCH is neither 'aarch64' nor 'x86_64':  $OS_ARCH ${Color_Off}\n"
     fi
