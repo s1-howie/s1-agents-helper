@@ -8,8 +8,6 @@
 ##############################################################################################################
 
 
-
-
 # Debugging ####################################################
 # echo "user: $S1_REPOSITORY_USERNAME"
 # echo "pass: $S1_REPOSITORY_PASSWORD"
@@ -27,17 +25,6 @@ Purple='\033[0;35m'       # Purple
 Cyan='\033[0;36m'         # Cyan
 White='\033[0;37m'        # White
 
-# Check if the minimum number of arguments have been passed
-# if [ $# -lt 4 ]; then
-#     printf "\n${Red}ERROR:  Expecting at least 4 arguments to be passed. \n${Color_Off}"
-#     printf "Example usage: \n"
-#     printf "ie:${Green} sudo $0 \$S1_REPOSITORY_USERNAME \$S1_REPOSITORY_PASSWORD \$S1_SITE_TOKEN 23.3.2.12  \n${Color_Off}"
-#     printf "\nFor instructions on obtaining a ${Purple}Site Token${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
-#     printf "    ${Blue}https://community.sentinelone.com/s/article/000004904 ${Color_Off} \n\n"
-#     printf "\nFor instructions on obtaining ${Purple}Repository Credentials${Color_Off} from the SentinelOne management console, please see the following KB article:\n"
-#     printf "    ${Blue}https://community.sentinelone.com/s/article/000008771 ${Color_Off} \n\n"
-#     exit 1
-# fi
 
 ################################################################################
 # Gather Inputs
