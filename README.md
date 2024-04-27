@@ -2,7 +2,7 @@
 A basic "helper script" to automate the download, installation, association to a site and activation of SentinelOne Agents on Linux.
 
 
-<code style="color : red">NOTE:  This repository will soon be deprecated as these scripts are being moved to another [repo](https://github.com/s1community/install-tools) on SentinelOne's S1Community GitHub.</code>
+> :warning: **This repository will soon be deprecated as these scripts are being moved to another [repo](https://github.com/s1community/install-tools) on SentinelOne's S1Community GitHub.**
 
 
 ## Detailed Description
