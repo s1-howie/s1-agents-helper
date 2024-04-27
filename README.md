@@ -1,6 +1,10 @@
 # s1-agent-helper.sh
 A basic "helper script" to automate the download, installation, association to a site and activation of SentinelOne Agents on Linux.
 
+<span style="color:red;">
+NOTE:  This repository will soon be deprecated as these scripts are being moved to another [repo](SentinelOne's S1Community) on SentinelOne's S1Community GitHub.
+</span>
+
 ## Detailed Description
 This script can be downloaded and executed manually or via script.  
 
